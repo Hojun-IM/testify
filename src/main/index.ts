@@ -1,5 +1,7 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
+import { getDb } from './db'
+import { registerProjectHandlers } from './ipc/projects'
 
 const isDev = !app.isPackaged
 
@@ -35,6 +37,8 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  getDb()
+  registerProjectHandlers()
   createWindow()
 
   app.on('activate', function () {

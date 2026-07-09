@@ -1,6 +1,12 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
+import type { ProjectCreateInput, ProjectListParams } from '../shared/types'
 
-const api = {}
+const api = {
+  projects: {
+    list: (params?: ProjectListParams) => ipcRenderer.invoke('projects:list', params),
+    create: (input: ProjectCreateInput) => ipcRenderer.invoke('projects:create', input)
+  }
+}
 
 if (process.contextIsolated) {
   try {
