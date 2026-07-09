@@ -1,0 +1,22 @@
+node_modules
+dist
+out
+release
+*.log
+npm-debug.log*
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.keystore
+
+# build artifacts
+*.tsbuildinfo

@@ -1,0 +1,17 @@
+appId: com.example.testify
+productName: testify
+directories:
+  buildResources: build
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!eslint.config.{js,mjs,cjs}'
+  - '!.eslintrc.cjs'
+  - '!.prettierrc.yaml'
+mac:
+  target: dmg
+win:
+  target: nsis
+linux:
+  target: AppImage
