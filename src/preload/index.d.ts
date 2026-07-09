@@ -1,4 +1,4 @@
-import type { Project, ProjectCreateInput, ProjectListParams } from '../shared/types'
+import type { Project, ProjectCreateInput, ProjectListParams, ProjectSummary } from '../shared/types'
 
 export {}
 
@@ -6,7 +6,7 @@ declare global {
   interface Window {
     api: {
       projects: {
-        list: (params?: ProjectListParams) => Promise<Project[]>
+        list: (params?: ProjectListParams) => Promise<ProjectSummary[]>
         create: (input: ProjectCreateInput) => Promise<Project>
       }
     }

@@ -10,6 +10,11 @@ export type Project = {
   updated_by: string
 }
 
+export type ProjectSummary = Project & {
+  test_count: number
+  test_case_count: number
+}
+
 export type ProjectListParams = {
   status?: ProjectStatus | 'all'
   search?: string
