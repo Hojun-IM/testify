@@ -109,13 +109,13 @@ button {
 .content-header {
   -webkit-app-region: no-drag;
   position: absolute;
-  top: 12px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   width: 780px;
   max-width: calc(100% - 32px);
 }
@@ -226,22 +226,89 @@ button {
   font-size: 13px;
 }
 
-.project-list-items {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
 
-.project-list-item {
+.project-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid;
+  border-radius: 10px;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.project-card-corner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 18px 18px 0;
+  border-color: transparent var(--color-overlay) transparent transparent;
+}
+
+.status-badge {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.status-badge-active {
+  background-color: rgba(143, 188, 143, 0.15);
+}
+.status-badge-archived {
+  background-color: var(--color-overlay);
+}
+
+.project-card-icon {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 13px;
+  justify-content: center;
+  padding: 12px 0 4px;
+}
+
+.project-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-card-id {
+  margin: -6px 0 0;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.project-card-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11.5px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-line);
 }
 
 .tabs {

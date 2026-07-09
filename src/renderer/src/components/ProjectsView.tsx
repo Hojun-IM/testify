@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import type { Project } from '../../../shared/types'
+import type { ProjectSummary } from '../../../shared/types'
 import { ContentHeaderBar } from './ContentHeaderBar'
+import { ProjectCard } from './ProjectCard'
 
 export function ProjectsView(): JSX.Element {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
-  const [projects, setProjects] = useState<Project[]>([])
+  const [projects, setProjects] = useState<ProjectSummary[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -49,16 +50,11 @@ export function ProjectsView(): JSX.Element {
             프로젝트가 없습니다. 프로젝트를 생성하여 테스트를 시작하세요.
           </p>
         ) : (
-          <ul className="project-list-items">
+          <div className="project-grid">
             {projects.map((project) => (
-              <li key={project.id} className="project-list-item bg-raised">
-                <span className="text-ivory">{project.name}</span>
-                <span className={project.status === 'active' ? 'text-ok' : 'text-ivory-faint'}>
-                  {project.status}
-                </span>
-              </li>
+              <ProjectCard key={project.id} project={project} />
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </>
