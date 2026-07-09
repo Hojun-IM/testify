@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Sidebar } from './components/Sidebar'
 import { PanelIcon } from './components/icons'
+import { ProjectsView } from './components/ProjectsView'
 
 function App(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -19,6 +20,7 @@ function App(): JSX.Element {
             <PanelIcon />
           </button>
         )}
+        <ProjectsView />
       </main>
     </div>
   )
