@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDownIcon } from './icons'
+import styles from './Dropdown.module.css'
 
 export type DropdownOption = {
   value: string
@@ -35,10 +36,10 @@ export function Dropdown({
   }, [open])
 
   return (
-    <div className="dropdown" ref={rootRef}>
+    <div className={styles.dropdown} ref={rootRef}>
       <button
         type="button"
-        className="dropdown-trigger bg-raised hover:bg-overlay text-ivory"
+        className={`${styles.trigger} bg-raised hover:bg-overlay text-ivory`}
         onClick={() => setOpen((prev) => !prev)}
       >
         <span className="text-ivory-faint">{label}</span>
@@ -48,12 +49,12 @@ export function Dropdown({
         </span>
       </button>
       {open && (
-        <ul className="dropdown-menu bg-raised border-line">
+        <ul className={`${styles.menu} bg-raised border-line`}>
           {options.map((option) => (
             <li key={option.value}>
               <button
                 type="button"
-                className={`dropdown-item hover:bg-overlay ${
+                className={`${styles.item} hover:bg-overlay ${
                   option.value === value ? 'text-ivory' : 'text-ivory-dim'
                 }`}
                 onClick={() => {

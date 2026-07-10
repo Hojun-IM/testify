@@ -1,9 +1,23 @@
 import { useEffect, useState } from 'react'
 import type { ProjectSummary } from '../../../shared/types'
-import { ContentHeaderBar } from './ContentHeaderBar'
+import { ContentDetailHeader } from './ContentDetailHeader'
+import { SearchInput } from './SearchInput'
+import { Dropdown, DropdownOption } from './Dropdown'
+import { Button } from './Button'
 import { ProjectCard } from './ProjectCard'
+import styles from './ProjectsView.module.css'
 
-export function ProjectsView(): JSX.Element {
+const filterOptions: DropdownOption[] = [
+  { value: 'all', label: '전체' },
+  { value: 'active', label: 'Active' },
+  { value: 'archived', label: 'Archived' }
+]
+
+export function ProjectsView({
+  onOpenProject
+}: {
+  onOpenProject: (project: ProjectSummary) => void
+}): JSX.Element {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
   const [projects, setProjects] = useState<ProjectSummary[]>([])
@@ -37,22 +51,25 @@ export function ProjectsView(): JSX.Element {
 
   return (
     <>
-      <ContentHeaderBar
-        search={search}
-        onSearchChange={setSearch}
-        status={status}
-        onStatusChange={setStatus}
-        onCreateProject={handleCreateProject}
-      />
-      <div className="project-list">
+      <ContentDetailHeader
+        right={
+          <>
+            <Dropdown label="필터 기준" options={filterOptions} value={status} onChange={setStatus} />
+            <Button onClick={handleCreateProject}>새 프로젝트</Button>
+          </>
+        }
+      >
+        <SearchInput value={search} onChange={setSearch} placeholder="프로젝트 검색..." />
+      </ContentDetailHeader>
+      <div className={styles.list}>
         {projects.length === 0 ? (
-          <p className="text-ivory-faint project-list-empty">
+          <p className={`text-ivory-faint ${styles.empty}`}>
             프로젝트가 없습니다. 프로젝트를 생성하여 테스트를 시작하세요.
           </p>
         ) : (
-          <div className="project-grid">
+          <div className={styles.grid}>
             {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+              <ProjectCard key={project.id} project={project} onClick={() => onOpenProject(project)} />
             ))}
           </div>
         )}
