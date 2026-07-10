@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import type { ProjectSummary } from '../../shared/types'
-import { Sidebar } from './components/Sidebar'
-import { PanelIcon } from './components/icons'
-import { ProjectsView } from './components/ProjectsView'
-import { ProjectDetailView } from './components/ProjectDetailView'
+import { Sidebar } from './components/layout/Sidebar'
+import { PanelIcon } from './components/ui/icons'
+import { ProjectsView } from './components/projects/ProjectsView'
+import { ProjectDetailView } from './components/projects/ProjectDetailView'
 import styles from './App.module.css'
 
 function App(): JSX.Element {

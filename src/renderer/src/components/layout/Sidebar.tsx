@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ProjectSummary } from '../../../shared/types'
+import type { ProjectSummary } from '../../../../shared/types'
 import {
   ArtifactIcon,
   ChevronDownIcon,
@@ -10,10 +10,10 @@ import {
   PlusIcon,
   SearchIcon,
   SlidersIcon
-} from './icons'
-import { Tabs } from './Tabs'
-import { MenuList } from './MenuList'
-import { MenuItem } from './MenuItem'
+} from '../ui/icons'
+import { Tabs } from '../ui/Tabs'
+import { MenuList } from '../ui/MenuList'
+import { MenuItem } from '../ui/MenuItem'
 import styles from './Sidebar.module.css'
 
 type Tab = 'project' | 'dashboard' | 'hook'

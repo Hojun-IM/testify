@@ -1,0 +1,16 @@
+.detail {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  box-sizing: border-box;
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  width: 780px;
+  max-width: calc(100% - 32px);
+  margin: 16px auto 0;
+}

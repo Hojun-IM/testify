@@ -3,7 +3,7 @@ import styles from './Tabs.module.css'
 
 export type TabItem = {
   value: string
-  icon: ReactNode
+  icon?: ReactNode
   label: string
 }
 

@@ -20,7 +20,8 @@
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
-  min-width: 140px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 4px;
   border-width: 1px;
   border-style: solid;
@@ -28,6 +29,8 @@
   list-style: none;
   margin: 0;
   z-index: 2;
+  max-height: 148px;
+  overflow-y: auto;
 }
 
 .item {

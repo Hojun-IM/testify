@@ -1,5 +1,8 @@
-import type { ProjectSummary } from '../../../shared/types'
+import type { ProjectSummary } from '../../../../shared/types'
 import { ProjectDetailHeader } from './ProjectDetailHeader'
+import { ProjectInfoPanel } from './ProjectInfoPanel'
+import { ProjectStatsPanel } from './ProjectStatsPanel'
+import { ProjectTestsSection } from './ProjectTestsSection'
 import styles from './ProjectDetailView.module.css'
 
 export function ProjectDetailView({
@@ -12,6 +15,11 @@ export function ProjectDetailView({
   return (
     <div className={styles.detail}>
       <ProjectDetailHeader project={project} sidebarCollapsed={sidebarCollapsed} />
+      <div className={styles.row}>
+        <ProjectInfoPanel project={project} />
+        <ProjectStatsPanel />
+      </div>
+      <ProjectTestsSection />
     </div>
   )
 }

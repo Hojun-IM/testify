@@ -13,7 +13,7 @@ export function Dropdown({
   value,
   onChange
 }: {
-  label: string
+  label?: string
   options: DropdownOption[]
   value: string
   onChange: (value: string) => void
@@ -42,7 +42,7 @@ export function Dropdown({
         className={`${styles.trigger} bg-raised hover:bg-overlay text-ivory`}
         onClick={() => setOpen((prev) => !prev)}
       >
-        <span className="text-ivory-faint">{label}</span>
+        {label && <span className="text-ivory-faint">{label}</span>}
         <span>{selected?.label ?? value}</span>
         <span className="text-ivory-faint chevron" style={{ transform: open ? 'rotate(180deg)' : undefined }}>
           <ChevronDownIcon size={12} />

@@ -1,6 +1,6 @@
-import type { ProjectSummary } from '../../../shared/types'
-import { FolderIcon } from './icons'
-import { StatusBadge } from './StatusBadge'
+import type { ProjectSummary } from '../../../../shared/types'
+import { FolderIcon } from '../ui/icons'
+import { StatusBadge } from '../ui/StatusBadge'
 import styles from './ProjectCard.module.css'
 
 function formatDate(iso: string): string {

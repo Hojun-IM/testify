@@ -1,4 +1,4 @@
-import type { ProjectStatus } from '../../../shared/types'
+import type { ProjectStatus } from '../../../../shared/types'
 import styles from './StatusBadge.module.css'
 
 export function StatusBadge({

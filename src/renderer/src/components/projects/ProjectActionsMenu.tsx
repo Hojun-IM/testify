@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import type { ProjectStatus } from '../../../shared/types'
-import { MoreIcon } from './icons'
+import type { ProjectStatus } from '../../../../shared/types'
+import { MoreIcon } from '../ui/icons'
 import styles from './ProjectActionsMenu.module.css'
 
 export function ProjectActionsMenu({ status }: { status: ProjectStatus }): JSX.Element {
