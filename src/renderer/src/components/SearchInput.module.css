@@ -1,0 +1,22 @@
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 7px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font: inherit;
+}
+.search input::placeholder {
+  color: var(--color-ivory-faint);
+}

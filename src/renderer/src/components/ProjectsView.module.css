@@ -1,0 +1,23 @@
+.list {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  top: 90px;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 780px;
+  max-width: calc(100% - 32px);
+  overflow: hidden;
+}
+
+.empty {
+  padding: 360px 0;
+  text-align: center;
+  font-size: 13px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}

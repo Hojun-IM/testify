@@ -115,6 +115,16 @@ export function LeafIcon({ size = 18 }: IconProps): JSX.Element {
   )
 }
 
+export function MoreIcon({ size = 16 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="currentColor">
+      <circle cx="10" cy="4.5" r="1.4" />
+      <circle cx="10" cy="10" r="1.4" />
+      <circle cx="10" cy="15.5" r="1.4" />
+    </svg>
+  )
+}
+
 export function ArrowRightIcon({ size = 14 }: IconProps): JSX.Element {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
