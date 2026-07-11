@@ -1,7 +1,13 @@
 import { ipcMain } from 'electron'
 import { randomUUID } from 'crypto'
 import { getDb, currentUser } from '../db'
-import type { Project, ProjectCreateInput, ProjectListParams, ProjectSummary } from '../../shared/types'
+import type {
+  Project,
+  ProjectCreateInput,
+  ProjectEnvironment,
+  ProjectListParams,
+  ProjectSummary
+} from '../../shared/types'
 
 export function registerProjectHandlers(): void {
   ipcMain.handle('projects:list', (_event, params: ProjectListParams = {}): ProjectSummary[] => {
@@ -41,13 +47,36 @@ export function registerProjectHandlers(): void {
     const user = currentUser()
     const id = randomUUID()
 
-    db.prepare(
+    const insertProject = db.prepare(
       `
         INSERT INTO projects (id, name, status, created_by, updated_by)
         VALUES (@id, @name, 'active', @user, @user)
       `
-    ).run({ id, name: input.name.trim(), user })
+    )
+    const insertEnvironment = db.prepare(
+      `
+        INSERT INTO project_environments (id, project_id, name, url)
+        VALUES (@id, @projectId, @name, @url)
+      `
+    )
+
+    db.transaction(() => {
+      insertProject.run({ id, name: input.name.trim(), user })
+      for (const env of input.environments ?? []) {
+        const name = env.name.trim()
+        const url = env.url.trim()
+        if (!name || !url) continue
+        insertEnvironment.run({ id: randomUUID(), projectId: id, name, url })
+      }
+    })()
 
     return db.prepare('SELECT * FROM projects WHERE id = ?').get(id) as Project
+  })
+
+  ipcMain.handle('projects:environments', (_event, projectId: string): ProjectEnvironment[] => {
+    const db = getDb()
+    return db
+      .prepare('SELECT * FROM project_environments WHERE project_id = ? ORDER BY created_dt ASC')
+      .all(projectId) as ProjectEnvironment[]
   })
 }

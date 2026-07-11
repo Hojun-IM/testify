@@ -11,6 +11,16 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_by  TEXT NOT NULL
 );
 
+-- 프로젝트에 등록된 환경
+CREATE TABLE IF NOT EXISTS project_environments (
+  id          TEXT PRIMARY KEY,
+  project_id  TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  url         TEXT NOT NULL,
+  created_dt  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+CREATE INDEX IF NOT EXISTS idx_project_environments_project_id ON project_environments(project_id);
+
 -- 테스트 (프로젝트에 속함)
 CREATE TABLE IF NOT EXISTS tests (
   id            TEXT PRIMARY KEY,

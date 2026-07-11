@@ -20,6 +20,18 @@ export type ProjectListParams = {
   search?: string
 }
 
+export type ProjectEnvironmentInput = {
+  name: string
+  url: string
+}
+
+export type ProjectEnvironment = ProjectEnvironmentInput & {
+  id: string
+  project_id: string
+  created_dt: string
+}
+
 export type ProjectCreateInput = {
   name: string
+  environments?: ProjectEnvironmentInput[]
 }

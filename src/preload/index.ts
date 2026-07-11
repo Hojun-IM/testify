@@ -4,7 +4,8 @@ import type { ProjectCreateInput, ProjectListParams } from '../shared/types'
 const api = {
   projects: {
     list: (params?: ProjectListParams) => ipcRenderer.invoke('projects:list', params),
-    create: (input: ProjectCreateInput) => ipcRenderer.invoke('projects:create', input)
+    create: (input: ProjectCreateInput) => ipcRenderer.invoke('projects:create', input),
+    environments: (projectId: string) => ipcRenderer.invoke('projects:environments', projectId)
   }
 }
 
