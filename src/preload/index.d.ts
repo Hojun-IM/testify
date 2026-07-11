@@ -5,7 +5,10 @@ import type {
   ProjectListParams,
   ProjectStatus,
   ProjectSummary,
-  ProjectUpdateInput
+  ProjectUpdateInput,
+  Test,
+  TestCreateInput,
+  TestListParams
 } from '../shared/types'
 
 export {}
@@ -20,6 +23,10 @@ declare global {
         update: (input: ProjectUpdateInput) => Promise<Project>
         setStatus: (id: string, status: ProjectStatus) => Promise<Project>
         remove: (id: string) => Promise<void>
+      }
+      tests: {
+        list: (params: TestListParams) => Promise<Test[]>
+        create: (input: TestCreateInput) => Promise<Test>
       }
     }
   }

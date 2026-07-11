@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { Test, TestType } from '../../../../shared/types'
 import { Dropdown, type DropdownOption } from '../ui/Dropdown'
 import { Button } from '../ui/Button'
 import { SearchInput } from '../ui/SearchInput'
 import { Table, type TableColumn } from '../ui/Table'
 import { Pagination } from '../ui/Pagination'
 import { IconMenuButton } from '../ui/IconMenuButton'
+import { NewTestModal } from './NewTestModal'
 import styles from './ProjectTestsSection.module.css'
 
 const TYPE_OPTIONS: DropdownOption[] = [
@@ -15,43 +17,25 @@ const TYPE_OPTIONS: DropdownOption[] = [
 
 const PAGE_SIZE = 8
 
-type TestType = 'api' | 'e2e'
-type TestResult = 'pass' | 'fail' | 'none'
-
-type TestSummary = {
-  id: string
-  name: string
-  type: TestType
-  lastResult: TestResult
-  updated_dt: string
+function formatDateTime(iso: string): string {
+  return iso.replace('T', ' ').slice(0, 16)
 }
 
-// TODO: 테스트(test) API가 생기면 실제 목록 조회로 교체
-const MOCK_TESTS: TestSummary[] = Array.from({ length: 23 }, (_, i) => ({
-  id: `t${i + 1}`,
-  name: `테스트 시나리오 ${i + 1}`,
-  type: i % 3 === 0 ? 'e2e' : 'api',
-  lastResult: i % 5 === 0 ? 'fail' : i % 4 === 0 ? 'none' : 'pass',
-  updated_dt: `2026-0${(i % 6) + 1}-${String((i % 27) + 1).padStart(2, '0')} 10:00`
-}))
-
-const RESULT_LABEL: Record<TestResult, string> = { pass: 'PASS', fail: 'FAIL', none: '미실행' }
-const RESULT_CLASS: Record<TestResult, string> = {
-  pass: 'text-ok',
-  fail: 'text-danger',
-  none: 'text-ivory-faint'
-}
-
-const columns: TableColumn<TestSummary>[] = [
+const columns: TableColumn<Test>[] = [
   { key: 'name', header: '이름', render: (row) => row.name },
   { key: 'type', header: '타입', width: '80px', render: (row) => row.type.toUpperCase() },
   {
-    key: 'lastResult',
+    key: 'last_run_at',
     header: '마지막 실행',
-    width: '100px',
-    render: (row) => <span className={RESULT_CLASS[row.lastResult]}>{RESULT_LABEL[row.lastResult]}</span>
+    width: '140px',
+    render: (row) =>
+      row.last_run_at ? (
+        <span className="text-ivory-dim">{formatDateTime(row.last_run_at)}</span>
+      ) : (
+        <span className="text-ivory-faint">미실행</span>
+      )
   },
-  { key: 'updated_dt', header: '업데이트됨', width: '160px', render: (row) => row.updated_dt },
+  { key: 'updated_dt', header: '업데이트됨', width: '160px', render: (row) => formatDateTime(row.updated_dt) },
   {
     key: 'actions',
     header: '',
@@ -70,22 +54,31 @@ const columns: TableColumn<TestSummary>[] = [
   }
 ]
 
-export function ProjectTestsSection(): JSX.Element {
+export function ProjectTestsSection({ projectId }: { projectId: string }): JSX.Element {
   const [search, setSearch] = useState('')
   const [type, setType] = useState('all')
   const [page, setPage] = useState(1)
+  const [tests, setTests] = useState<Test[]>([])
+  const [newTestOpen, setNewTestOpen] = useState(false)
 
-  const filtered = useMemo(() => {
-    return MOCK_TESTS.filter((test) => {
-      const matchesType = type === 'all' || test.type === type
-      const matchesSearch = test.name.toLowerCase().includes(search.trim().toLowerCase())
-      return matchesType && matchesSearch
-    })
-  }, [search, type])
+  useEffect(() => {
+    let cancelled = false
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+    const timer = setTimeout(() => {
+      window.api.tests.list({ projectId, type: type as TestType | 'all', search }).then((result) => {
+        if (!cancelled) setTests(result)
+      })
+    }, 200)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [projectId, search, type])
+
+  const totalPages = Math.max(1, Math.ceil(tests.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
-  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const pageItems = tests.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   function handleSearchChange(value: string): void {
     setSearch(value)
@@ -97,6 +90,12 @@ export function ProjectTestsSection(): JSX.Element {
     setPage(1)
   }
 
+  async function handleCreateTest(input: { name: string; type: TestType }): Promise<void> {
+    await window.api.tests.create({ project_id: projectId, name: input.name, type: input.type })
+    const result = await window.api.tests.list({ projectId, type: type as TestType | 'all', search })
+    setTests(result)
+  }
+
   return (
     <div className={styles.section}>
       <div className={styles.controlsRow}>
@@ -106,7 +105,7 @@ export function ProjectTestsSection(): JSX.Element {
         <div className={styles.right}>
           <Button variant="ghost">Export</Button>
           <Button variant="ghost">Import</Button>
-          <Button>새 테스트</Button>
+          <Button onClick={() => setNewTestOpen(true)}>새 테스트</Button>
         </div>
       </div>
       <SearchInput value={search} onChange={handleSearchChange} placeholder="테스트 검색..." />
@@ -121,9 +120,10 @@ export function ProjectTestsSection(): JSX.Element {
           page={currentPage}
           totalPages={totalPages}
           onChange={setPage}
-          totalItems={filtered.length}
+          totalItems={tests.length}
         />
       </div>
+      <NewTestModal open={newTestOpen} onClose={() => setNewTestOpen(false)} onCreate={handleCreateTest} />
     </div>
   )
 }
