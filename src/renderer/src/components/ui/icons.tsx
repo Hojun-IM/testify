@@ -149,3 +149,12 @@ export function ChevronRightIcon({ size = 14 }: IconProps): JSX.Element {
     </svg>
   )
 }
+
+export function CloseIcon({ size = 16 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <line x1="5" y1="5" x2="15" y2="15" />
+      <line x1="15" y1="5" x2="5" y2="15" />
+    </svg>
+  )
+}

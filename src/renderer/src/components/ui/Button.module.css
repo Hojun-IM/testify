@@ -9,6 +9,11 @@
   white-space: nowrap;
 }
 
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .primary {
   background-color: var(--color-ivory);
   color: var(--color-canvas);
