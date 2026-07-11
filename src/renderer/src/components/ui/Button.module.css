@@ -22,6 +22,14 @@
   background-color: var(--color-ivory-dim);
 }
 
+.danger {
+  background-color: var(--color-danger);
+  color: var(--color-ivory);
+}
+.danger:hover {
+  background-color: color-mix(in srgb, var(--color-danger) 85%, black 15%);
+}
+
 :global(.btn-ghost) {
   font-weight: 500;
 }

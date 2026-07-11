@@ -9,10 +9,15 @@ export function Button({
 }: {
   children: ReactNode
   onClick?: () => void
-  variant?: 'primary' | 'ghost'
+  variant?: 'primary' | 'ghost' | 'danger'
   disabled?: boolean
 }): JSX.Element {
-  const variantClass = variant === 'primary' ? styles.primary : 'btn-ghost bg-raised hover:bg-overlay text-ivory'
+  const variantClass =
+    variant === 'primary'
+      ? styles.primary
+      : variant === 'danger'
+        ? styles.danger
+        : 'btn-ghost bg-raised hover:bg-overlay text-ivory'
 
   return (
     <button type="button" onClick={onClick} disabled={disabled} className={`${styles.btn} ${variantClass}`}>
