@@ -15,11 +15,13 @@ export function ProjectDetailView({
   return (
     <div className={styles.detail}>
       <ProjectDetailHeader project={project} sidebarCollapsed={sidebarCollapsed} />
-      <div className={styles.row}>
-        <ProjectInfoPanel project={project} />
-        <ProjectStatsPanel />
+      <div className={styles.body}>
+        <div className={styles.row}>
+          <ProjectInfoPanel project={project} />
+          <ProjectStatsPanel />
+        </div>
+        <ProjectTestsSection />
       </div>
-      <ProjectTestsSection />
     </div>
   )
 }

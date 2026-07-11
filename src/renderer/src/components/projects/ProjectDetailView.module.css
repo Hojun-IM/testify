@@ -5,6 +5,13 @@
   flex-direction: column;
 }
 
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-app-region: no-drag;
+}
+
 .row {
   box-sizing: border-box;
   display: flex;
