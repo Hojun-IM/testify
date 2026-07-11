@@ -16,3 +16,7 @@
 .primary:hover {
   background-color: var(--color-ivory-dim);
 }
+
+:global(.btn-ghost) {
+  font-weight: 500;
+}
