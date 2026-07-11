@@ -1,0 +1,57 @@
+.pagination {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.total {
+  font-size: 12.5px;
+}
+
+.pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination :global(.icon-btn):disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pagination :global(.icon-btn):disabled:hover {
+  background-color: transparent;
+}
+
+.pageBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 12.5px;
+}
+
+.pageBtn:hover {
+  background-color: var(--color-overlay);
+}
+
+.active {
+  background-color: var(--color-overlay);
+  font-weight: 600;
+}
+
+.ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  font-size: 12.5px;
+}

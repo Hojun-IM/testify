@@ -133,3 +133,19 @@ export function ArrowRightIcon({ size = 14 }: IconProps): JSX.Element {
     </svg>
   )
 }
+
+export function ChevronLeftIcon({ size = 14 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <polyline points="12,5 7,10 12,15" />
+    </svg>
+  )
+}
+
+export function ChevronRightIcon({ size = 14 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <polyline points="8,5 13,10 8,15" />
+    </svg>
+  )
+}
