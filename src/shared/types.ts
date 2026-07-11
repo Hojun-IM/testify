@@ -35,3 +35,9 @@ export type ProjectCreateInput = {
   name: string
   environments?: ProjectEnvironmentInput[]
 }
+
+export type ProjectUpdateInput = {
+  id: string
+  name: string
+  environments?: ProjectEnvironmentInput[]
+}

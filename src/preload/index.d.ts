@@ -3,7 +3,9 @@ import type {
   ProjectCreateInput,
   ProjectEnvironment,
   ProjectListParams,
-  ProjectSummary
+  ProjectStatus,
+  ProjectSummary,
+  ProjectUpdateInput
 } from '../shared/types'
 
 export {}
@@ -15,6 +17,9 @@ declare global {
         list: (params?: ProjectListParams) => Promise<ProjectSummary[]>
         create: (input: ProjectCreateInput) => Promise<Project>
         environments: (projectId: string) => Promise<ProjectEnvironment[]>
+        update: (input: ProjectUpdateInput) => Promise<Project>
+        setStatus: (id: string, status: ProjectStatus) => Promise<Project>
+        remove: (id: string) => Promise<void>
       }
     }
   }

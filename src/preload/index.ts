@@ -1,11 +1,15 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { ProjectCreateInput, ProjectListParams } from '../shared/types'
+import type { ProjectCreateInput, ProjectListParams, ProjectStatus, ProjectUpdateInput } from '../shared/types'
 
 const api = {
   projects: {
     list: (params?: ProjectListParams) => ipcRenderer.invoke('projects:list', params),
     create: (input: ProjectCreateInput) => ipcRenderer.invoke('projects:create', input),
-    environments: (projectId: string) => ipcRenderer.invoke('projects:environments', projectId)
+    environments: (projectId: string) => ipcRenderer.invoke('projects:environments', projectId),
+    update: (input: ProjectUpdateInput) => ipcRenderer.invoke('projects:update', input),
+    setStatus: (id: string, status: ProjectStatus) =>
+      ipcRenderer.invoke('projects:setStatus', { id, status }),
+    remove: (id: string) => ipcRenderer.invoke('projects:remove', id)
   }
 }
 
