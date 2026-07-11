@@ -1,14 +1,10 @@
 import { useState } from 'react'
+import type { ProjectEnvironmentInput } from '../../../../shared/types'
 import styles from './EnvironmentBadgeList.module.css'
-
-export type ProjectEnvironment = {
-  name: string
-  url: string
-}
 
 const TOOLTIP_OFFSET = 12
 
-function EnvironmentBadge({ env }: { env: ProjectEnvironment }): JSX.Element {
+function EnvironmentBadge({ env }: { env: ProjectEnvironmentInput }): JSX.Element {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null)
 
   return (
@@ -30,7 +26,11 @@ function EnvironmentBadge({ env }: { env: ProjectEnvironment }): JSX.Element {
   )
 }
 
-export function EnvironmentBadgeList({ environments }: { environments: ProjectEnvironment[] }): JSX.Element {
+export function EnvironmentBadgeList({
+  environments
+}: {
+  environments: ProjectEnvironmentInput[]
+}): JSX.Element {
   return (
     <ul className={styles.list}>
       {environments.map((env) => (

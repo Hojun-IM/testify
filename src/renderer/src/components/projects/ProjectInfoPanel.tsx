@@ -1,15 +1,8 @@
-import type { ReactNode } from 'react'
-import type { ProjectSummary } from '../../../../shared/types'
+import { useEffect, useState, type ReactNode } from 'react'
+import type { ProjectEnvironment, ProjectSummary } from '../../../../shared/types'
 import { StatusBadge } from '../ui/StatusBadge'
-import { EnvironmentBadgeList, type ProjectEnvironment } from './EnvironmentBadgeList'
+import { EnvironmentBadgeList } from './EnvironmentBadgeList'
 import styles from './ProjectInfoPanel.module.css'
-
-// TODO: 프로젝트별 환경 등록 기능이 생기면 실제 데이터로 교체
-const MOCK_ENVIRONMENTS: ProjectEnvironment[] = [
-  { name: 'local', url: 'http://localhost:5173' },
-  { name: 'dev', url: 'https://dev.testify.example.com' },
-  { name: 'prod', url: 'https://testify.example.com' }
-]
 
 function formatDateTime(iso: string): string {
   return iso.replace('T', ' ').slice(0, 16)
@@ -25,6 +18,18 @@ function InfoRow({ label, children }: { label: string; children: ReactNode }): J
 }
 
 export function ProjectInfoPanel({ project }: { project: ProjectSummary }): JSX.Element {
+  const [environments, setEnvironments] = useState<ProjectEnvironment[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    window.api.projects.environments(project.id).then((result) => {
+      if (!cancelled) setEnvironments(result)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [project.id])
+
   return (
     <div className={`${styles.panel} bg-raised border-line`}>
       <div className={styles.grid}>
@@ -41,7 +46,7 @@ export function ProjectInfoPanel({ project }: { project: ProjectSummary }): JSX.
           <span className="text-ivory">{project.test_case_count}개</span>
         </InfoRow>
         <InfoRow label="등록된 환경">
-          <EnvironmentBadgeList environments={MOCK_ENVIRONMENTS} />
+          <EnvironmentBadgeList environments={environments} />
         </InfoRow>
         <InfoRow label="생성일">
           <span className="text-ivory">{formatDateTime(project.created_dt)}</span>

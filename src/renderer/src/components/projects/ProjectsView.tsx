@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import type { ProjectSummary } from '../../../../shared/types'
+import type { ProjectEnvironmentInput, ProjectSummary } from '../../../../shared/types'
 import { ContentDetailHeader } from '../layout/ContentDetailHeader'
 import { SearchInput } from '../ui/SearchInput'
 import { Dropdown, DropdownOption } from '../ui/Dropdown'
 import { Button } from '../ui/Button'
 import { ProjectCard } from './ProjectCard'
+import { NewProjectModal } from './NewProjectModal'
 import styles from './ProjectsView.module.css'
 
 const filterOptions: DropdownOption[] = [
@@ -21,6 +22,7 @@ export function ProjectsView({
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
   const [projects, setProjects] = useState<ProjectSummary[]>([])
+  const [newProjectOpen, setNewProjectOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -37,16 +39,12 @@ export function ProjectsView({
     }
   }, [search, status])
 
-  async function handleCreateProject(): Promise<void> {
-    const name = window.prompt('프로젝트명을 입력하세요')
-    if (!name || !name.trim()) return
-
-    await window.api.projects.create({ name })
-    const result = await window.api.projects.list({
-      status: status as 'all' | 'active' | 'archived',
-      search
-    })
-    setProjects(result)
+  async function handleCreateProject(input: {
+    name: string
+    environments: ProjectEnvironmentInput[]
+  }): Promise<void> {
+    const created = await window.api.projects.create(input)
+    onOpenProject({ ...created, test_count: 0, test_case_count: 0 })
   }
 
   return (
@@ -55,7 +53,7 @@ export function ProjectsView({
         right={
           <>
             <Dropdown label="필터 기준" options={filterOptions} value={status} onChange={setStatus} />
-            <Button onClick={handleCreateProject}>새 프로젝트</Button>
+            <Button onClick={() => setNewProjectOpen(true)}>새 프로젝트</Button>
           </>
         }
       >
@@ -74,6 +72,11 @@ export function ProjectsView({
           </div>
         )}
       </div>
+      <NewProjectModal
+        open={newProjectOpen}
+        onClose={() => setNewProjectOpen(false)}
+        onCreate={handleCreateProject}
+      />
     </>
   )
 }
