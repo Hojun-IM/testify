@@ -1,33 +1,41 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ProjectEnvironmentInput } from '../../../../shared/types'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { TextField } from '../ui/TextField'
 import { FolderIcon, PlusIcon, CloseIcon } from '../ui/icons'
-import styles from './NewProjectModal.module.css'
+import styles from './ProjectFormModal.module.css'
 
-export function NewProjectModal({
+export type ProjectFormValues = {
+  name: string
+  environments: ProjectEnvironmentInput[]
+}
+
+export function ProjectFormModal({
   open,
   onClose,
-  onCreate
+  onSubmit,
+  mode = 'create',
+  initialValues
 }: {
   open: boolean
   onClose: () => void
-  onCreate: (input: { name: string; environments: ProjectEnvironmentInput[] }) => Promise<void>
+  onSubmit: (values: ProjectFormValues) => Promise<void>
+  mode?: 'create' | 'edit'
+  initialValues?: ProjectFormValues
 }): JSX.Element {
   const [name, setName] = useState('')
   const [environments, setEnvironments] = useState<ProjectEnvironmentInput[]>([])
   const [submitting, setSubmitting] = useState(false)
 
-  function reset(): void {
-    setName('')
-    setEnvironments([])
-  }
-
-  function handleClose(): void {
-    reset()
-    onClose()
-  }
+  useEffect(() => {
+    if (open) {
+      setName(initialValues?.name ?? '')
+      setEnvironments(initialValues?.environments ?? [])
+    }
+    // 모달이 열릴 때만 초기값으로 리셋한다 (열려 있는 동안 initialValues 재생성으로 인한 입력값 덮어쓰기 방지)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   function addEnvironment(): void {
     setEnvironments((prev) => [...prev, { name: '', url: '' }])
@@ -50,26 +58,27 @@ export function NewProjectModal({
       .filter((env) => env.name && env.url)
 
     setSubmitting(true)
-    await onCreate({ name: trimmedName, environments: validEnvironments })
+    await onSubmit({ name: trimmedName, environments: validEnvironments })
     setSubmitting(false)
-    reset()
     onClose()
   }
+
+  const isEdit = mode === 'edit'
 
   return (
     <Modal
       open={open}
-      onClose={handleClose}
+      onClose={onClose}
       size="lg"
       icon={<FolderIcon />}
-      title="새 프로젝트"
+      title={isEdit ? '프로젝트 수정' : '새 프로젝트'}
       footer={
         <>
-          <Button variant="ghost" onClick={handleClose}>
+          <Button variant="ghost" onClick={onClose}>
             취소
           </Button>
           <Button onClick={handleSubmit} disabled={!name.trim() || submitting}>
-            {submitting ? '생성 중...' : '프로젝트 생성'}
+            {submitting ? (isEdit ? '수정 중...' : '생성 중...') : isEdit ? '수정' : '프로젝트 생성'}
           </Button>
         </>
       }

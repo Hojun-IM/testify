@@ -7,14 +7,23 @@ import styles from './ProjectDetailView.module.css'
 
 export function ProjectDetailView({
   project,
-  sidebarCollapsed
+  sidebarCollapsed,
+  onProjectUpdated,
+  onProjectDeleted
 }: {
   project: ProjectSummary
   sidebarCollapsed?: boolean
+  onProjectUpdated: (project: ProjectSummary) => void
+  onProjectDeleted: () => void
 }): JSX.Element {
   return (
     <div className={styles.detail}>
-      <ProjectDetailHeader project={project} sidebarCollapsed={sidebarCollapsed} />
+      <ProjectDetailHeader
+        project={project}
+        sidebarCollapsed={sidebarCollapsed}
+        onProjectUpdated={onProjectUpdated}
+        onProjectDeleted={onProjectDeleted}
+      />
       <div className={styles.body}>
         <div className={styles.row}>
           <ProjectInfoPanel project={project} />

@@ -1,67 +1,27 @@
-import { useEffect, useRef, useState } from 'react'
-import type { ProjectStatus } from '../../../../shared/types'
-import { MoreIcon } from '../ui/icons'
-import styles from './ProjectActionsMenu.module.css'
+import type { ProjectSummary } from '../../../../shared/types'
+import { IconMenuButton } from '../ui/IconMenuButton'
 
-export function ProjectActionsMenu({ status }: { status: ProjectStatus }): JSX.Element {
-  const [open, setOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
-  const isActive = status === 'active'
-
-  useEffect(() => {
-    if (!open) return
-
-    function handleClickOutside(event: MouseEvent): void {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [open])
+export function ProjectActionsMenu({
+  project,
+  onToggleStatus,
+  onEdit,
+  onDelete
+}: {
+  project: ProjectSummary
+  onToggleStatus: () => void
+  onEdit: () => void
+  onDelete: () => void
+}): JSX.Element {
+  const isActive = project.status === 'active'
 
   return (
-    <div className={styles.dropdown} ref={rootRef}>
-      <button
-        type="button"
-        className="icon-btn text-ivory-faint"
-        aria-label="프로젝트 설정"
-        onClick={() => setOpen((prev) => !prev)}
-      >
-        <MoreIcon />
-      </button>
-      {open && (
-        <ul className={`${styles.menu} bg-raised border-line`}>
-          <li>
-            <button
-              type="button"
-              className={`${styles.item} hover:bg-overlay text-ivory-dim`}
-              onClick={() => setOpen(false)}
-            >
-              {isActive ? '비활성화' : '활성화'}
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              className={`${styles.item} hover:bg-overlay text-ivory-dim`}
-              onClick={() => setOpen(false)}
-            >
-              수정
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              className={`${styles.item} hover:bg-overlay text-danger`}
-              onClick={() => setOpen(false)}
-            >
-              삭제
-            </button>
-          </li>
-        </ul>
-      )}
-    </div>
+    <IconMenuButton
+      ariaLabel="프로젝트 설정"
+      items={[
+        { label: isActive ? '비활성화' : '활성화', onClick: onToggleStatus },
+        { label: '수정', onClick: onEdit },
+        { label: '삭제', onClick: onDelete, danger: true }
+      ]}
+    />
   )
 }
