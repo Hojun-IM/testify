@@ -16,6 +16,16 @@ function App(): JSX.Element {
     setRecentProjects((prev) => [project, ...prev.filter((item) => item.id !== project.id)])
   }
 
+  function handleProjectUpdated(updated: ProjectSummary): void {
+    setActiveProject(updated)
+    setRecentProjects((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
+  }
+
+  function handleProjectDeleted(): void {
+    setRecentProjects((prev) => prev.filter((item) => item.id !== activeProject?.id))
+    setActiveProject(null)
+  }
+
   return (
     <div className={styles.layout}>
       {sidebarOpen && (
@@ -38,7 +48,12 @@ function App(): JSX.Element {
           </button>
         )}
         {activeProject ? (
-          <ProjectDetailView project={activeProject} sidebarCollapsed={!sidebarOpen} />
+          <ProjectDetailView
+            project={activeProject}
+            sidebarCollapsed={!sidebarOpen}
+            onProjectUpdated={handleProjectUpdated}
+            onProjectDeleted={handleProjectDeleted}
+          />
         ) : (
           <ProjectsView onOpenProject={openProject} />
         )}

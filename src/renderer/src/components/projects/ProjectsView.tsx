@@ -4,8 +4,9 @@ import { ContentDetailHeader } from '../layout/ContentDetailHeader'
 import { SearchInput } from '../ui/SearchInput'
 import { Dropdown, DropdownOption } from '../ui/Dropdown'
 import { Button } from '../ui/Button'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { ProjectCard } from './ProjectCard'
-import { NewProjectModal } from './NewProjectModal'
+import { ProjectFormModal, type ProjectFormValues } from './ProjectFormModal'
 import styles from './ProjectsView.module.css'
 
 const filterOptions: DropdownOption[] = [
@@ -22,7 +23,20 @@ export function ProjectsView({
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
   const [projects, setProjects] = useState<ProjectSummary[]>([])
-  const [newProjectOpen, setNewProjectOpen] = useState(false)
+
+  const [formOpen, setFormOpen] = useState(false)
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
+  const [editingProject, setEditingProject] = useState<ProjectSummary | null>(null)
+  const [editingEnvironments, setEditingEnvironments] = useState<ProjectEnvironmentInput[]>([])
+  const [deletingProject, setDeletingProject] = useState<ProjectSummary | null>(null)
+
+  async function refreshProjects(): Promise<void> {
+    const result = await window.api.projects.list({
+      status: status as 'all' | 'active' | 'archived',
+      search
+    })
+    setProjects(result)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -39,12 +53,43 @@ export function ProjectsView({
     }
   }, [search, status])
 
-  async function handleCreateProject(input: {
-    name: string
-    environments: ProjectEnvironmentInput[]
-  }): Promise<void> {
-    const created = await window.api.projects.create(input)
+  function openCreateModal(): void {
+    setFormMode('create')
+    setEditingProject(null)
+    setEditingEnvironments([])
+    setFormOpen(true)
+  }
+
+  async function openEditModal(project: ProjectSummary): Promise<void> {
+    const envs = await window.api.projects.environments(project.id)
+    setFormMode('edit')
+    setEditingProject(project)
+    setEditingEnvironments(envs.map((env) => ({ name: env.name, url: env.url })))
+    setFormOpen(true)
+  }
+
+  async function handleFormSubmit(values: ProjectFormValues): Promise<void> {
+    if (formMode === 'edit' && editingProject) {
+      await window.api.projects.update({ id: editingProject.id, ...values })
+      await refreshProjects()
+      return
+    }
+
+    const created = await window.api.projects.create(values)
     onOpenProject({ ...created, test_count: 0, test_case_count: 0 })
+  }
+
+  async function handleToggleStatus(project: ProjectSummary): Promise<void> {
+    const nextStatus = project.status === 'active' ? 'archived' : 'active'
+    await window.api.projects.setStatus(project.id, nextStatus)
+    await refreshProjects()
+  }
+
+  async function handleConfirmDelete(): Promise<void> {
+    if (!deletingProject) return
+    await window.api.projects.remove(deletingProject.id)
+    setDeletingProject(null)
+    await refreshProjects()
   }
 
   return (
@@ -53,7 +98,7 @@ export function ProjectsView({
         right={
           <>
             <Dropdown label="필터 기준" options={filterOptions} value={status} onChange={setStatus} />
-            <Button onClick={() => setNewProjectOpen(true)}>새 프로젝트</Button>
+            <Button onClick={openCreateModal}>새 프로젝트</Button>
           </>
         }
       >
@@ -67,15 +112,36 @@ export function ProjectsView({
         ) : (
           <div className={styles.grid}>
             {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} onClick={() => onOpenProject(project)} />
+              <ProjectCard
+                key={project.id}
+                project={project}
+                onClick={() => onOpenProject(project)}
+                onToggleStatus={() => handleToggleStatus(project)}
+                onEdit={() => openEditModal(project)}
+                onDelete={() => setDeletingProject(project)}
+              />
             ))}
           </div>
         )}
       </div>
-      <NewProjectModal
-        open={newProjectOpen}
-        onClose={() => setNewProjectOpen(false)}
-        onCreate={handleCreateProject}
+      <ProjectFormModal
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSubmit={handleFormSubmit}
+        mode={formMode}
+        initialValues={
+          formMode === 'edit' && editingProject
+            ? { name: editingProject.name, environments: editingEnvironments }
+            : undefined
+        }
+      />
+      <ConfirmDialog
+        open={!!deletingProject}
+        onClose={() => setDeletingProject(null)}
+        onConfirm={handleConfirmDelete}
+        title="프로젝트 삭제"
+        description={`"${deletingProject?.name}" 프로젝트를 삭제하면 프로젝트에 속한 모든 테스트, 테스트 케이스, 실행 기록이 함께 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="영구 삭제"
       />
     </>
   )

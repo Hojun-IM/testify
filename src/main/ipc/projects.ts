@@ -6,7 +6,9 @@ import type {
   ProjectCreateInput,
   ProjectEnvironment,
   ProjectListParams,
-  ProjectSummary
+  ProjectStatus,
+  ProjectSummary,
+  ProjectUpdateInput
 } from '../../shared/types'
 
 export function registerProjectHandlers(): void {
@@ -78,5 +80,61 @@ export function registerProjectHandlers(): void {
     return db
       .prepare('SELECT * FROM project_environments WHERE project_id = ? ORDER BY created_dt ASC')
       .all(projectId) as ProjectEnvironment[]
+  })
+
+  ipcMain.handle('projects:update', (_event, input: ProjectUpdateInput): Project => {
+    const db = getDb()
+    const user = currentUser()
+
+    const updateProject = db.prepare(
+      `
+        UPDATE projects
+        SET name = @name, updated_dt = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), updated_by = @user
+        WHERE id = @id
+      `
+    )
+    const deleteEnvironments = db.prepare('DELETE FROM project_environments WHERE project_id = ?')
+    const insertEnvironment = db.prepare(
+      `
+        INSERT INTO project_environments (id, project_id, name, url)
+        VALUES (@id, @projectId, @name, @url)
+      `
+    )
+
+    db.transaction(() => {
+      updateProject.run({ id: input.id, name: input.name.trim(), user })
+      deleteEnvironments.run(input.id)
+      for (const env of input.environments ?? []) {
+        const name = env.name.trim()
+        const url = env.url.trim()
+        if (!name || !url) continue
+        insertEnvironment.run({ id: randomUUID(), projectId: input.id, name, url })
+      }
+    })()
+
+    return db.prepare('SELECT * FROM projects WHERE id = ?').get(input.id) as Project
+  })
+
+  ipcMain.handle(
+    'projects:setStatus',
+    (_event, { id, status }: { id: string; status: ProjectStatus }): Project => {
+      const db = getDb()
+      const user = currentUser()
+
+      db.prepare(
+        `
+          UPDATE projects
+          SET status = @status, updated_dt = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), updated_by = @user
+          WHERE id = @id
+        `
+      ).run({ id, status, user })
+
+      return db.prepare('SELECT * FROM projects WHERE id = ?').get(id) as Project
+    }
+  )
+
+  ipcMain.handle('projects:remove', (_event, id: string): void => {
+    const db = getDb()
+    db.prepare('DELETE FROM projects WHERE id = ?').run(id)
   })
 }
