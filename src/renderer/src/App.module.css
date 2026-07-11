@@ -1,0 +1,23 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 8px;
+  gap: 8px;
+  background-color: var(--color-canvas);
+}
+
+.mainContent {
+  position: relative;
+  flex: 1;
+  border-radius: 6px;
+  -webkit-app-region: drag;
+}
+
+.expandBtn {
+  position: absolute;
+  top: 7px;
+  left: 71px;
+  z-index: 1;
+}

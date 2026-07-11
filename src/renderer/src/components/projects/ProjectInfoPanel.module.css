@@ -1,0 +1,29 @@
+.panel {
+  -webkit-app-region: no-drag;
+  flex: 0.85;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 16px;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 6px;
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}

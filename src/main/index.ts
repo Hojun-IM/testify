@@ -1,5 +1,7 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
+import { getDb } from './db'
+import { registerProjectHandlers } from './ipc/projects'
 
 const isDev = !app.isPackaged
 
@@ -13,7 +15,7 @@ function createWindow(): void {
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     trafficLightPosition: { x: 16, y: 20 },
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '../preload/index.cjs'),
       sandbox: false
     }
   })
@@ -35,6 +37,8 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  getDb()
+  registerProjectHandlers()
   createWindow()
 
   app.on('activate', function () {

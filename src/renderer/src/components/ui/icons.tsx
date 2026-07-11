@@ -115,11 +115,46 @@ export function LeafIcon({ size = 18 }: IconProps): JSX.Element {
   )
 }
 
+export function MoreIcon({ size = 16 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="currentColor">
+      <circle cx="10" cy="4.5" r="1.4" />
+      <circle cx="10" cy="10" r="1.4" />
+      <circle cx="10" cy="15.5" r="1.4" />
+    </svg>
+  )
+}
+
 export function ArrowRightIcon({ size = 14 }: IconProps): JSX.Element {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
       <line x1="4" y1="10" x2="16" y2="10" />
       <polyline points="11,5 16,10 11,15" />
+    </svg>
+  )
+}
+
+export function ChevronLeftIcon({ size = 14 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <polyline points="12,5 7,10 12,15" />
+    </svg>
+  )
+}
+
+export function ChevronRightIcon({ size = 14 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <polyline points="8,5 13,10 8,15" />
+    </svg>
+  )
+}
+
+export function CloseIcon({ size = 16 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <line x1="5" y1="5" x2="15" y2="15" />
+      <line x1="15" y1="5" x2="5" y2="15" />
     </svg>
   )
 }
