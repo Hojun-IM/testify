@@ -41,3 +41,36 @@ export type ProjectUpdateInput = {
   name: string
   environments?: ProjectEnvironmentInput[]
 }
+
+export type TestType = 'api' | 'e2e'
+
+export type Test = {
+  id: string
+  project_id: string
+  name: string
+  description: string | null
+  type: TestType
+  last_run_at: string | null
+  created_dt: string
+  updated_dt: string
+  created_by: string
+  updated_by: string
+}
+
+export type TestListParams = {
+  projectId: string
+  type?: TestType | 'all'
+  search?: string
+}
+
+export type TestCreateInput = {
+  project_id: string
+  name: string
+  type: TestType
+}
+
+export type TestUpdateInput = {
+  id: string
+  name: string
+  type: TestType
+}

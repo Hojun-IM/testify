@@ -5,7 +5,11 @@ import type {
   ProjectListParams,
   ProjectStatus,
   ProjectSummary,
-  ProjectUpdateInput
+  ProjectUpdateInput,
+  Test,
+  TestCreateInput,
+  TestListParams,
+  TestUpdateInput
 } from '../shared/types'
 
 export {}
@@ -19,6 +23,12 @@ declare global {
         environments: (projectId: string) => Promise<ProjectEnvironment[]>
         update: (input: ProjectUpdateInput) => Promise<Project>
         setStatus: (id: string, status: ProjectStatus) => Promise<Project>
+        remove: (id: string) => Promise<void>
+      }
+      tests: {
+        list: (params: TestListParams) => Promise<Test[]>
+        create: (input: TestCreateInput) => Promise<Test>
+        update: (input: TestUpdateInput) => Promise<Test>
         remove: (id: string) => Promise<void>
       }
     }

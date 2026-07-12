@@ -1,10 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { Test, TestType } from '../../../../shared/types'
 import { Dropdown, type DropdownOption } from '../ui/Dropdown'
 import { Button } from '../ui/Button'
 import { SearchInput } from '../ui/SearchInput'
 import { Table, type TableColumn } from '../ui/Table'
 import { Pagination } from '../ui/Pagination'
 import { IconMenuButton } from '../ui/IconMenuButton'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
+import { TestFormModal, type TestFormValues } from './TestFormModal'
 import styles from './ProjectTestsSection.module.css'
 
 const TYPE_OPTIONS: DropdownOption[] = [
@@ -15,77 +18,79 @@ const TYPE_OPTIONS: DropdownOption[] = [
 
 const PAGE_SIZE = 8
 
-type TestType = 'api' | 'e2e'
-type TestResult = 'pass' | 'fail' | 'none'
-
-type TestSummary = {
-  id: string
-  name: string
-  type: TestType
-  lastResult: TestResult
-  updated_dt: string
+function formatDateTime(iso: string): string {
+  return iso.replace('T', ' ').slice(0, 16)
 }
 
-// TODO: 테스트(test) API가 생기면 실제 목록 조회로 교체
-const MOCK_TESTS: TestSummary[] = Array.from({ length: 23 }, (_, i) => ({
-  id: `t${i + 1}`,
-  name: `테스트 시나리오 ${i + 1}`,
-  type: i % 3 === 0 ? 'e2e' : 'api',
-  lastResult: i % 5 === 0 ? 'fail' : i % 4 === 0 ? 'none' : 'pass',
-  updated_dt: `2026-0${(i % 6) + 1}-${String((i % 27) + 1).padStart(2, '0')} 10:00`
-}))
-
-const RESULT_LABEL: Record<TestResult, string> = { pass: 'PASS', fail: 'FAIL', none: '미실행' }
-const RESULT_CLASS: Record<TestResult, string> = {
-  pass: 'text-ok',
-  fail: 'text-danger',
-  none: 'text-ivory-faint'
+function buildColumns(onEdit: (test: Test) => void, onDelete: (test: Test) => void): TableColumn<Test>[] {
+  return [
+    { key: 'name', header: '이름', render: (row) => row.name },
+    { key: 'type', header: '타입', width: '80px', render: (row) => row.type.toUpperCase() },
+    {
+      key: 'last_run_at',
+      header: '마지막 실행',
+      width: '140px',
+      render: (row) =>
+        row.last_run_at ? (
+          <span className="text-ivory-dim">{formatDateTime(row.last_run_at)}</span>
+        ) : (
+          <span className="text-ivory-faint">미실행</span>
+        )
+    },
+    { key: 'updated_dt', header: '업데이트됨', width: '160px', render: (row) => formatDateTime(row.updated_dt) },
+    {
+      key: 'actions',
+      header: '',
+      width: '40px',
+      align: 'right',
+      truncate: false,
+      render: (row) => (
+        <IconMenuButton
+          ariaLabel="테스트 설정"
+          items={[
+            { label: '수정', onClick: () => onEdit(row) },
+            { label: '삭제', onClick: () => onDelete(row), danger: true }
+          ]}
+        />
+      )
+    }
+  ]
 }
 
-const columns: TableColumn<TestSummary>[] = [
-  { key: 'name', header: '이름', render: (row) => row.name },
-  { key: 'type', header: '타입', width: '80px', render: (row) => row.type.toUpperCase() },
-  {
-    key: 'lastResult',
-    header: '마지막 실행',
-    width: '100px',
-    render: (row) => <span className={RESULT_CLASS[row.lastResult]}>{RESULT_LABEL[row.lastResult]}</span>
-  },
-  { key: 'updated_dt', header: '업데이트됨', width: '160px', render: (row) => row.updated_dt },
-  {
-    key: 'actions',
-    header: '',
-    width: '40px',
-    align: 'right',
-    truncate: false,
-    render: () => (
-      <IconMenuButton
-        ariaLabel="테스트 설정"
-        items={[
-          { label: '수정', onClick: () => {} },
-          { label: '삭제', onClick: () => {}, danger: true }
-        ]}
-      />
-    )
-  }
-]
-
-export function ProjectTestsSection(): JSX.Element {
+export function ProjectTestsSection({ projectId }: { projectId: string }): JSX.Element {
   const [search, setSearch] = useState('')
   const [type, setType] = useState('all')
   const [page, setPage] = useState(1)
+  const [tests, setTests] = useState<Test[]>([])
 
-  const filtered = useMemo(() => {
-    return MOCK_TESTS.filter((test) => {
-      const matchesType = type === 'all' || test.type === type
-      const matchesSearch = test.name.toLowerCase().includes(search.trim().toLowerCase())
-      return matchesType && matchesSearch
-    })
-  }, [search, type])
+  const [formOpen, setFormOpen] = useState(false)
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
+  const [editingTest, setEditingTest] = useState<Test | null>(null)
+  const [deletingTest, setDeletingTest] = useState<Test | null>(null)
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  async function refreshTests(): Promise<void> {
+    const result = await window.api.tests.list({ projectId, type: type as TestType | 'all', search })
+    setTests(result)
+  }
+
+  useEffect(() => {
+    let cancelled = false
+
+    const timer = setTimeout(() => {
+      window.api.tests.list({ projectId, type: type as TestType | 'all', search }).then((result) => {
+        if (!cancelled) setTests(result)
+      })
+    }, 200)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [projectId, search, type])
+
+  const totalPages = Math.max(1, Math.ceil(tests.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
-  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const pageItems = tests.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   function handleSearchChange(value: string): void {
     setSearch(value)
@@ -97,6 +102,36 @@ export function ProjectTestsSection(): JSX.Element {
     setPage(1)
   }
 
+  function openCreateModal(): void {
+    setFormMode('create')
+    setEditingTest(null)
+    setFormOpen(true)
+  }
+
+  function openEditModal(test: Test): void {
+    setFormMode('edit')
+    setEditingTest(test)
+    setFormOpen(true)
+  }
+
+  async function handleFormSubmit(values: TestFormValues): Promise<void> {
+    if (formMode === 'edit' && editingTest) {
+      await window.api.tests.update({ id: editingTest.id, ...values })
+    } else {
+      await window.api.tests.create({ project_id: projectId, ...values })
+    }
+    await refreshTests()
+  }
+
+  async function handleConfirmDelete(): Promise<void> {
+    if (!deletingTest) return
+    await window.api.tests.remove(deletingTest.id)
+    setDeletingTest(null)
+    await refreshTests()
+  }
+
+  const columns = buildColumns(openEditModal, setDeletingTest)
+
   return (
     <div className={styles.section}>
       <div className={styles.controlsRow}>
@@ -106,7 +141,7 @@ export function ProjectTestsSection(): JSX.Element {
         <div className={styles.right}>
           <Button variant="ghost">Export</Button>
           <Button variant="ghost">Import</Button>
-          <Button>새 테스트</Button>
+          <Button onClick={openCreateModal}>새 테스트</Button>
         </div>
       </div>
       <SearchInput value={search} onChange={handleSearchChange} placeholder="테스트 검색..." />
@@ -121,9 +156,26 @@ export function ProjectTestsSection(): JSX.Element {
           page={currentPage}
           totalPages={totalPages}
           onChange={setPage}
-          totalItems={filtered.length}
+          totalItems={tests.length}
         />
       </div>
+      <TestFormModal
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSubmit={handleFormSubmit}
+        mode={formMode}
+        initialValues={
+          formMode === 'edit' && editingTest ? { name: editingTest.name, type: editingTest.type } : undefined
+        }
+      />
+      <ConfirmDialog
+        open={!!deletingTest}
+        onClose={() => setDeletingTest(null)}
+        onConfirm={handleConfirmDelete}
+        title="테스트 삭제"
+        description={`"${deletingTest?.name}" 테스트를 삭제하면 여기에 속한 모든 테스트 케이스와 실행 기록이 함께 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="영구 삭제"
+      />
     </div>
   )
 }

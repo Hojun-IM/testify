@@ -1,5 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { ProjectCreateInput, ProjectListParams, ProjectStatus, ProjectUpdateInput } from '../shared/types'
+import type {
+  ProjectCreateInput,
+  ProjectListParams,
+  ProjectStatus,
+  ProjectUpdateInput,
+  TestCreateInput,
+  TestListParams,
+  TestUpdateInput
+} from '../shared/types'
 
 const api = {
   projects: {
@@ -10,6 +18,12 @@ const api = {
     setStatus: (id: string, status: ProjectStatus) =>
       ipcRenderer.invoke('projects:setStatus', { id, status }),
     remove: (id: string) => ipcRenderer.invoke('projects:remove', id)
+  },
+  tests: {
+    list: (params: TestListParams) => ipcRenderer.invoke('tests:list', params),
+    create: (input: TestCreateInput) => ipcRenderer.invoke('tests:create', input),
+    update: (input: TestUpdateInput) => ipcRenderer.invoke('tests:update', input),
+    remove: (id: string) => ipcRenderer.invoke('tests:remove', id)
   }
 }
 

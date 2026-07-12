@@ -29,7 +29,7 @@ export function ProjectDetailView({
           <ProjectInfoPanel project={project} />
           <ProjectStatsPanel />
         </div>
-        <ProjectTestsSection />
+        <ProjectTestsSection projectId={project.id} />
       </div>
     </div>
   )
