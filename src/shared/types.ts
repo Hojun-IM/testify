@@ -68,3 +68,9 @@ export type TestCreateInput = {
   name: string
   type: TestType
 }
+
+export type TestUpdateInput = {
+  id: string
+  name: string
+  type: TestType
+}

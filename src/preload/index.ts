@@ -5,7 +5,8 @@ import type {
   ProjectStatus,
   ProjectUpdateInput,
   TestCreateInput,
-  TestListParams
+  TestListParams,
+  TestUpdateInput
 } from '../shared/types'
 
 const api = {
@@ -20,7 +21,9 @@ const api = {
   },
   tests: {
     list: (params: TestListParams) => ipcRenderer.invoke('tests:list', params),
-    create: (input: TestCreateInput) => ipcRenderer.invoke('tests:create', input)
+    create: (input: TestCreateInput) => ipcRenderer.invoke('tests:create', input),
+    update: (input: TestUpdateInput) => ipcRenderer.invoke('tests:update', input),
+    remove: (id: string) => ipcRenderer.invoke('tests:remove', id)
   }
 }
 

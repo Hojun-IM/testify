@@ -8,7 +8,8 @@ import type {
   ProjectUpdateInput,
   Test,
   TestCreateInput,
-  TestListParams
+  TestListParams,
+  TestUpdateInput
 } from '../shared/types'
 
 export {}
@@ -27,6 +28,8 @@ declare global {
       tests: {
         list: (params: TestListParams) => Promise<Test[]>
         create: (input: TestCreateInput) => Promise<Test>
+        update: (input: TestUpdateInput) => Promise<Test>
+        remove: (id: string) => Promise<void>
       }
     }
   }

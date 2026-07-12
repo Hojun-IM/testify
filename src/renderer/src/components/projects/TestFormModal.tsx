@@ -1,64 +1,73 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { TestType } from '../../../../shared/types'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { TextField } from '../ui/TextField'
 import { Dropdown, type DropdownOption } from '../ui/Dropdown'
 import { CodeIcon } from '../ui/icons'
-import styles from './NewTestModal.module.css'
+import styles from './TestFormModal.module.css'
 
 const TYPE_OPTIONS: DropdownOption[] = [
   { value: 'api', label: 'API' },
   { value: 'e2e', label: 'E2E' }
 ]
 
-export function NewTestModal({
+export type TestFormValues = {
+  name: string
+  type: TestType
+}
+
+export function TestFormModal({
   open,
   onClose,
-  onCreate
+  onSubmit,
+  mode = 'create',
+  initialValues
 }: {
   open: boolean
   onClose: () => void
-  onCreate: (input: { name: string; type: TestType }) => Promise<void>
+  onSubmit: (values: TestFormValues) => Promise<void>
+  mode?: 'create' | 'edit'
+  initialValues?: TestFormValues
 }): JSX.Element {
   const [name, setName] = useState('')
   const [type, setType] = useState('api')
   const [submitting, setSubmitting] = useState(false)
 
-  function reset(): void {
-    setName('')
-    setType('api')
-  }
-
-  function handleClose(): void {
-    reset()
-    onClose()
-  }
+  useEffect(() => {
+    if (open) {
+      setName(initialValues?.name ?? '')
+      setType(initialValues?.type ?? 'api')
+    }
+    // 모달이 열릴 때만 초기값으로 리셋한다 (열려 있는 동안 initialValues 재생성으로 인한 입력값 덮어쓰기 방지)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   async function handleSubmit(): Promise<void> {
     const trimmed = name.trim()
     if (!trimmed) return
 
     setSubmitting(true)
-    await onCreate({ name: trimmed, type: type as TestType })
+    await onSubmit({ name: trimmed, type: type as TestType })
     setSubmitting(false)
-    reset()
     onClose()
   }
+
+  const isEdit = mode === 'edit'
 
   return (
     <Modal
       open={open}
-      onClose={handleClose}
+      onClose={onClose}
       icon={<CodeIcon />}
-      title="새 테스트"
+      title={isEdit ? '테스트 수정' : '새 테스트'}
       footer={
         <>
-          <Button variant="ghost" onClick={handleClose}>
+          <Button variant="ghost" onClick={onClose}>
             취소
           </Button>
           <Button onClick={handleSubmit} disabled={!name.trim() || submitting}>
-            {submitting ? '생성 중...' : '테스트 생성'}
+            {submitting ? (isEdit ? '수정 중...' : '생성 중...') : isEdit ? '수정' : '테스트 생성'}
           </Button>
         </>
       }
