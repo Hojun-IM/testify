@@ -7,6 +7,7 @@ import type {
   TestCaseListParams,
   TestCasePolicy,
   TestCaseReorderInput,
+  TestCaseStep,
   TestCaseUpdateInput
 } from '../../shared/types'
 
@@ -16,12 +17,34 @@ type TestCaseRow = Omit<TestCase, 'steps' | 'tags' | 'policy'> & {
   policy: string
 }
 
+const DEFAULT_POLICY: TestCasePolicy = {
+  targetEnvs: [],
+  trigger: 'manual',
+  retryCount: 0,
+  timeoutSec: 30,
+  notifyOnFailure: false
+}
+
+// 앱을 거치지 않고 직접 삽입되었거나 이전 스키마로 저장된 행은 policy/steps가 불완전할 수 있어
+// 항상 완전한 형태로 정규화해서 내려준다 (그렇지 않으면 프론트에서 예: policy.targetEnvs가
+// undefined가 되어 렌더링이 깨진다)
+function normalizeStep(step: unknown): TestCaseStep {
+  if (step && typeof step === 'object') {
+    const partial = step as Partial<TestCaseStep>
+    return { action: partial.action ?? '', expected: partial.expected ?? '', outcome: partial.outcome ?? '' }
+  }
+  return { action: typeof step === 'string' ? step : '', expected: '', outcome: '' }
+}
+
 function parseRow(row: TestCaseRow): TestCase {
+  const parsedSteps = JSON.parse(row.steps) as unknown[]
+  const parsedPolicy = JSON.parse(row.policy) as Partial<TestCasePolicy>
+
   return {
     ...row,
-    steps: JSON.parse(row.steps),
+    steps: parsedSteps.map(normalizeStep),
     tags: JSON.parse(row.tags),
-    policy: JSON.parse(row.policy) as TestCasePolicy
+    policy: { ...DEFAULT_POLICY, ...parsedPolicy }
   }
 }
 

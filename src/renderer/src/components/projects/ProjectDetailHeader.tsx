@@ -12,12 +12,14 @@ export function ProjectDetailHeader({
   project,
   sidebarCollapsed,
   onProjectUpdated,
-  onProjectDeleted
+  onProjectDeleted,
+  onEnvironmentsChanged
 }: {
   project: ProjectSummary
   sidebarCollapsed?: boolean
   onProjectUpdated: (project: ProjectSummary) => void
   onProjectDeleted: () => void
+  onEnvironmentsChanged: () => void
 }): JSX.Element {
   const [editOpen, setEditOpen] = useState(false)
   const [editEnvironments, setEditEnvironments] = useState<ProjectEnvironmentInput[]>([])
@@ -38,6 +40,7 @@ export function ProjectDetailHeader({
   async function handleEditSubmit(values: ProjectFormValues): Promise<void> {
     const updated = await window.api.projects.update({ id: project.id, ...values })
     onProjectUpdated({ ...project, ...updated })
+    onEnvironmentsChanged()
   }
 
   async function handleDelete(): Promise<void> {
