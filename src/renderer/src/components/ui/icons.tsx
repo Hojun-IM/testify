@@ -158,3 +158,16 @@ export function CloseIcon({ size = 16 }: IconProps): JSX.Element {
     </svg>
   )
 }
+
+export function DragHandleIcon({ size = 14 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="currentColor">
+      <circle cx="7" cy="5" r="1.3" />
+      <circle cx="13" cy="5" r="1.3" />
+      <circle cx="7" cy="10" r="1.3" />
+      <circle cx="13" cy="10" r="1.3" />
+      <circle cx="7" cy="15" r="1.3" />
+      <circle cx="13" cy="15" r="1.3" />
+    </svg>
+  )
+}

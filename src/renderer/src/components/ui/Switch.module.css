@@ -1,0 +1,32 @@
+.switch {
+  -webkit-app-region: no-drag;
+  box-sizing: border-box;
+  width: 34px;
+  height: 19px;
+  padding: 0;
+  border: none;
+  border-radius: 100px;
+  background-color: var(--color-line);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: var(--color-ivory);
+  transition: transform 0.15s ease;
+}
+
+.switch.on {
+  background-color: var(--color-clay-500);
+}
+
+.switch.on::after {
+  transform: translateX(15px);
+}
