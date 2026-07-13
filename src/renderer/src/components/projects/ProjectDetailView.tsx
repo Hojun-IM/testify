@@ -1,4 +1,4 @@
-import type { ProjectSummary } from '../../../../shared/types'
+import type { ProjectSummary, Test } from '../../../../shared/types'
 import { ProjectDetailHeader } from './ProjectDetailHeader'
 import { ProjectInfoPanel } from './ProjectInfoPanel'
 import { ProjectStatsPanel } from './ProjectStatsPanel'
@@ -9,12 +9,14 @@ export function ProjectDetailView({
   project,
   sidebarCollapsed,
   onProjectUpdated,
-  onProjectDeleted
+  onProjectDeleted,
+  onSelectTest
 }: {
   project: ProjectSummary
   sidebarCollapsed?: boolean
   onProjectUpdated: (project: ProjectSummary) => void
   onProjectDeleted: () => void
+  onSelectTest: (test: Test) => void
 }): JSX.Element {
   return (
     <div className={styles.detail}>
@@ -29,7 +31,7 @@ export function ProjectDetailView({
           <ProjectInfoPanel project={project} />
           <ProjectStatsPanel />
         </div>
-        <ProjectTestsSection projectId={project.id} />
+        <ProjectTestsSection projectId={project.id} onSelectTest={onSelectTest} />
       </div>
     </div>
   )

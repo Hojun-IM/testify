@@ -45,19 +45,27 @@ function buildColumns(onEdit: (test: Test) => void, onDelete: (test: Test) => vo
       align: 'right',
       truncate: false,
       render: (row) => (
-        <IconMenuButton
-          ariaLabel="테스트 설정"
-          items={[
-            { label: '수정', onClick: () => onEdit(row) },
-            { label: '삭제', onClick: () => onDelete(row), danger: true }
-          ]}
-        />
+        <span onClick={(event) => event.stopPropagation()}>
+          <IconMenuButton
+            ariaLabel="테스트 설정"
+            items={[
+              { label: '수정', onClick: () => onEdit(row) },
+              { label: '삭제', onClick: () => onDelete(row), danger: true }
+            ]}
+          />
+        </span>
       )
     }
   ]
 }
 
-export function ProjectTestsSection({ projectId }: { projectId: string }): JSX.Element {
+export function ProjectTestsSection({
+  projectId,
+  onSelectTest
+}: {
+  projectId: string
+  onSelectTest: (test: Test) => void
+}): JSX.Element {
   const [search, setSearch] = useState('')
   const [type, setType] = useState('all')
   const [page, setPage] = useState(1)
@@ -149,6 +157,7 @@ export function ProjectTestsSection({ projectId }: { projectId: string }): JSX.E
         columns={columns}
         data={pageItems}
         rowKey={(row) => row.id}
+        onRowClick={onSelectTest}
         emptyMessage="테스트가 없습니다."
       />
       <div className={styles.footer}>
