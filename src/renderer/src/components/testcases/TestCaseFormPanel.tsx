@@ -4,7 +4,6 @@ import { SlidePanel } from '../ui/SlidePanel'
 import { Button } from '../ui/Button'
 import { TextField } from '../ui/TextField'
 import { type DropdownOption } from '../ui/Dropdown'
-import { MultiSelectDropdown } from '../ui/MultiSelectDropdown'
 import { Switch } from '../ui/Switch'
 import { CodeIcon, PlusIcon, CloseIcon } from '../ui/icons'
 import styles from './TestCaseFormPanel.module.css'
@@ -86,6 +85,15 @@ export function TestCaseFormPanel({
     setPolicy((prev) => ({ ...prev, ...patch }))
   }
 
+  function toggleTargetEnv(env: string): void {
+    setPolicy((prev) => ({
+      ...prev,
+      targetEnvs: prev.targetEnvs.includes(env)
+        ? prev.targetEnvs.filter((item) => item !== env)
+        : [...prev.targetEnvs, env]
+    }))
+  }
+
   async function handleSubmit(): Promise<void> {
     const trimmed = name.trim()
     if (!trimmed) return
@@ -112,7 +120,6 @@ export function TestCaseFormPanel({
   }
 
   const isEdit = mode === 'edit'
-  const envOptions = environmentOptions.map((env) => ({ value: env, label: env }))
 
   return (
     <SlidePanel
@@ -219,17 +226,36 @@ export function TestCaseFormPanel({
       </label>
 
       <div className={`${styles.sectionTitle} text-clay-300`}>상세 설정</div>
-      <div className={styles.policyGrid}>
-        <div className={styles.field}>
-          <span className={`${styles.label} text-ivory-dim`}>실행 대상 환경</span>
-          <MultiSelectDropdown
-            options={envOptions}
-            values={policy.targetEnvs}
-            onChange={(values) => updatePolicy({ targetEnvs: values })}
-            placeholder="전체 환경"
-            allLabel="전체 환경"
-          />
+      <div className={styles.field}>
+        <span className={`${styles.label} text-ivory-dim`}>실행 대상 환경</span>
+        <div className={styles.envCheckGroup}>
+          {environmentOptions.length === 0 ? (
+            <span className="text-ivory-faint" style={{ fontSize: 11.5 }}>
+              등록된 환경이 없습니다. 미선택 시 전체 환경에서 실행됩니다.
+            </span>
+          ) : (
+            environmentOptions.map((env) => {
+              const checked = policy.targetEnvs.includes(env)
+              return (
+                <label
+                  key={env}
+                  className={`${styles.envCheckBtn} ${checked ? styles.envCheckActive : ''} border-line`}
+                >
+                  <input
+                    type="checkbox"
+                    className={styles.envCheckbox}
+                    checked={checked}
+                    onChange={() => toggleTargetEnv(env)}
+                  />
+                  {env}
+                </label>
+              )
+            })
+          )}
         </div>
+      </div>
+
+      <div className={styles.policyGrid}>
         <div className={styles.field}>
           <span className={`${styles.label} text-ivory-dim`}>재시도 횟수</span>
           <input
