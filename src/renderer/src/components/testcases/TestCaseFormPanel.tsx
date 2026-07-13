@@ -4,7 +4,6 @@ import { SlidePanel } from '../ui/SlidePanel'
 import { Button } from '../ui/Button'
 import { TextField } from '../ui/TextField'
 import { type DropdownOption } from '../ui/Dropdown'
-import { Switch } from '../ui/Switch'
 import { CodeIcon, PlusIcon, CloseIcon } from '../ui/icons'
 import styles from './TestCaseFormPanel.module.css'
 
@@ -38,15 +37,13 @@ export function TestCaseFormPanel({
   onClose,
   onSubmit,
   mode = 'create',
-  initialValues,
-  environmentOptions
+  initialValues
 }: {
   open: boolean
   onClose: () => void
   onSubmit: (values: TestCaseFormValues) => Promise<void>
   mode?: 'create' | 'edit'
   initialValues?: TestCaseFormValues
-  environmentOptions: string[]
 }): JSX.Element {
   const [name, setName] = useState('')
   const [status, setStatus] = useState<TestCaseStatus>('draft')
@@ -79,19 +76,6 @@ export function TestCaseFormPanel({
 
   function removeStep(index: number): void {
     setSteps((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  function updatePolicy(patch: Partial<TestCasePolicy>): void {
-    setPolicy((prev) => ({ ...prev, ...patch }))
-  }
-
-  function toggleTargetEnv(env: string): void {
-    setPolicy((prev) => ({
-      ...prev,
-      targetEnvs: prev.targetEnvs.includes(env)
-        ? prev.targetEnvs.filter((item) => item !== env)
-        : [...prev.targetEnvs, env]
-    }))
   }
 
   async function handleSubmit(): Promise<void> {
@@ -224,66 +208,6 @@ export function TestCaseFormPanel({
           placeholder="쉼표(,)로 구분 (예: auth, critical-path)"
         />
       </label>
-
-      <div className={`${styles.sectionTitle} text-clay-300`}>상세 설정</div>
-      <div className={styles.field}>
-        <span className={`${styles.label} text-ivory-dim`}>실행 대상 환경</span>
-        <div className={styles.envCheckGroup}>
-          {environmentOptions.length === 0 ? (
-            <span className="text-ivory-faint" style={{ fontSize: 11.5 }}>
-              등록된 환경이 없습니다. 미선택 시 전체 환경에서 실행됩니다.
-            </span>
-          ) : (
-            environmentOptions.map((env) => {
-              const checked = policy.targetEnvs.includes(env)
-              return (
-                <label
-                  key={env}
-                  className={`${styles.envCheckBtn} ${checked ? styles.envCheckActive : ''} border-line`}
-                >
-                  <input
-                    type="checkbox"
-                    className={styles.envCheckbox}
-                    checked={checked}
-                    onChange={() => toggleTargetEnv(env)}
-                  />
-                  {env}
-                </label>
-              )
-            })
-          )}
-        </div>
-      </div>
-
-      <div className={styles.policyGrid}>
-        <div className={styles.field}>
-          <span className={`${styles.label} text-ivory-dim`}>재시도 횟수</span>
-          <input
-            type="number"
-            min={0}
-            className={`${styles.numberInput} bg-raised border-line text-ivory`}
-            value={policy.retryCount}
-            onChange={(event) => updatePolicy({ retryCount: Number(event.target.value) })}
-          />
-        </div>
-        <div className={styles.field}>
-          <span className={`${styles.label} text-ivory-dim`}>타임아웃(초)</span>
-          <input
-            type="number"
-            min={0}
-            className={`${styles.numberInput} bg-raised border-line text-ivory`}
-            value={policy.timeoutSec}
-            onChange={(event) => updatePolicy({ timeoutSec: Number(event.target.value) })}
-          />
-        </div>
-      </div>
-      <div className={styles.toggleRow}>
-        <div>
-          <div className="text-ivory">실패 시 알림</div>
-          <div className={`${styles.toggleHint} text-ivory-faint`}>실행 실패 시 담당자에게 알림 발송</div>
-        </div>
-        <Switch checked={policy.notifyOnFailure} onChange={(value) => updatePolicy({ notifyOnFailure: value })} />
-      </div>
     </SlidePanel>
   )
 }

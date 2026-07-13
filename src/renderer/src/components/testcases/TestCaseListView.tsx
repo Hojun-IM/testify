@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { ProjectEnvironment, ProjectSummary, Test, TestCase } from '../../../../shared/types'
+import type { ProjectSummary, Test, TestCase } from '../../../../shared/types'
 import { ChevronLeftIcon } from '../ui/icons'
 import { SearchInput } from '../ui/SearchInput'
 import { Button } from '../ui/Button'
@@ -21,7 +21,6 @@ export function TestCaseListView({
 }): JSX.Element {
   const [search, setSearch] = useState('')
   const [cases, setCases] = useState<TestCase[]>([])
-  const [environments, setEnvironments] = useState<ProjectEnvironment[]>([])
   const casesRef = useRef<TestCase[]>([])
 
   const [panelOpen, setPanelOpen] = useState(false)
@@ -32,10 +31,6 @@ export function TestCaseListView({
   useEffect(() => {
     casesRef.current = cases
   }, [cases])
-
-  useEffect(() => {
-    window.api.projects.environments(project.id).then(setEnvironments)
-  }, [project.id])
 
   async function refreshCases(): Promise<void> {
     const result = await window.api.testCases.list({ testId: test.id, search })
@@ -101,8 +96,6 @@ export function TestCaseListView({
     })
   }
 
-  const environmentOptions = environments.map((env) => env.name)
-
   return (
     <div className={styles.view}>
       <div className={`${styles.header} ${sidebarCollapsed ? styles.collapsed : ''}`}>
@@ -147,7 +140,6 @@ export function TestCaseListView({
         onClose={() => setPanelOpen(false)}
         onSubmit={handlePanelSubmit}
         mode={panelMode}
-        environmentOptions={environmentOptions}
         initialValues={
           panelMode === 'edit' && editingCase
             ? {
