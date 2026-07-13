@@ -4,6 +4,10 @@ import type {
   ProjectListParams,
   ProjectStatus,
   ProjectUpdateInput,
+  TestCaseCreateInput,
+  TestCaseListParams,
+  TestCaseReorderInput,
+  TestCaseUpdateInput,
   TestCreateInput,
   TestListParams,
   TestUpdateInput
@@ -24,6 +28,13 @@ const api = {
     create: (input: TestCreateInput) => ipcRenderer.invoke('tests:create', input),
     update: (input: TestUpdateInput) => ipcRenderer.invoke('tests:update', input),
     remove: (id: string) => ipcRenderer.invoke('tests:remove', id)
+  },
+  testCases: {
+    list: (params: TestCaseListParams) => ipcRenderer.invoke('testCases:list', params),
+    create: (input: TestCaseCreateInput) => ipcRenderer.invoke('testCases:create', input),
+    update: (input: TestCaseUpdateInput) => ipcRenderer.invoke('testCases:update', input),
+    remove: (id: string) => ipcRenderer.invoke('testCases:remove', id),
+    reorder: (input: TestCaseReorderInput) => ipcRenderer.invoke('testCases:reorder', input)
   }
 }
 

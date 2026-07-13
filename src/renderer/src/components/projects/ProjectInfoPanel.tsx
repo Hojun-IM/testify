@@ -17,7 +17,13 @@ function InfoRow({ label, children }: { label: string; children: ReactNode }): J
   )
 }
 
-export function ProjectInfoPanel({ project }: { project: ProjectSummary }): JSX.Element {
+export function ProjectInfoPanel({
+  project,
+  environmentsVersion
+}: {
+  project: ProjectSummary
+  environmentsVersion?: number
+}): JSX.Element {
   const [environments, setEnvironments] = useState<ProjectEnvironment[]>([])
 
   useEffect(() => {
@@ -28,7 +34,9 @@ export function ProjectInfoPanel({ project }: { project: ProjectSummary }): JSX.
     return () => {
       cancelled = true
     }
-  }, [project.id])
+    // 프로젝트 수정 모달에서 환경을 바꾸면 project.id는 그대로라 이 effect가 재실행되지 않으므로,
+    // 수정 성공 시 부모가 올려주는 environmentsVersion을 의존성에 포함해 강제로 재조회한다
+  }, [project.id, environmentsVersion])
 
   return (
     <div className={`${styles.panel} bg-raised border-line`}>

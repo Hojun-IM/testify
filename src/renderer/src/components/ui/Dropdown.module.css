@@ -33,6 +33,13 @@
   overflow-y: auto;
 }
 
+.portalMenu {
+  position: fixed;
+  right: auto;
+  z-index: 200;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
 .item {
   width: 100%;
   text-align: left;

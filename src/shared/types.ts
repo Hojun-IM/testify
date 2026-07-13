@@ -74,3 +74,62 @@ export type TestUpdateInput = {
   name: string
   type: TestType
 }
+
+export type TestCaseStatus = 'draft' | 'ready' | 'deprecated'
+
+export type TestCaseTrigger = 'manual' | 'pr' | 'schedule'
+
+export type TestCasePolicy = {
+  targetEnvs: string[]
+  trigger: TestCaseTrigger
+  retryCount: number
+  timeoutSec: number
+  notifyOnFailure: boolean
+}
+
+export type TestCaseStep = {
+  action: string
+  expected: string
+  outcome: string
+}
+
+export type TestCase = {
+  id: string
+  test_id: string
+  name: string
+  status: TestCaseStatus
+  precondition: string | null
+  steps: TestCaseStep[]
+  tags: string[]
+  policy: TestCasePolicy
+  order_index: number
+  last_run_at: string | null
+  created_dt: string
+  updated_dt: string
+  created_by: string
+  updated_by: string
+}
+
+export type TestCaseListParams = {
+  testId: string
+  search?: string
+}
+
+export type TestCaseCreateInput = {
+  test_id: string
+  name: string
+  status: TestCaseStatus
+  precondition: string
+  steps: TestCaseStep[]
+  tags: string[]
+  policy: TestCasePolicy
+}
+
+export type TestCaseUpdateInput = TestCaseCreateInput & {
+  id: string
+}
+
+export type TestCaseReorderInput = {
+  test_id: string
+  ordered_ids: string[]
+}

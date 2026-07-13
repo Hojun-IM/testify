@@ -3,6 +3,7 @@ import { join } from 'path'
 import { getDb } from './db'
 import { registerProjectHandlers } from './ipc/projects'
 import { registerTestHandlers } from './ipc/tests'
+import { registerTestCaseHandlers } from './ipc/testCases'
 
 const isDev = !app.isPackaged
 
@@ -41,6 +42,7 @@ app.whenReady().then(() => {
   getDb()
   registerProjectHandlers()
   registerTestHandlers()
+  registerTestCaseHandlers()
   createWindow()
 
   app.on('activate', function () {

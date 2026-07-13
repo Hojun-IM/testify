@@ -1,4 +1,5 @@
-import type { ProjectSummary } from '../../../../shared/types'
+import { useState } from 'react'
+import type { ProjectSummary, Test } from '../../../../shared/types'
 import { ProjectDetailHeader } from './ProjectDetailHeader'
 import { ProjectInfoPanel } from './ProjectInfoPanel'
 import { ProjectStatsPanel } from './ProjectStatsPanel'
@@ -9,13 +10,17 @@ export function ProjectDetailView({
   project,
   sidebarCollapsed,
   onProjectUpdated,
-  onProjectDeleted
+  onProjectDeleted,
+  onSelectTest
 }: {
   project: ProjectSummary
   sidebarCollapsed?: boolean
   onProjectUpdated: (project: ProjectSummary) => void
   onProjectDeleted: () => void
+  onSelectTest: (test: Test) => void
 }): JSX.Element {
+  const [environmentsVersion, setEnvironmentsVersion] = useState(0)
+
   return (
     <div className={styles.detail}>
       <ProjectDetailHeader
@@ -23,13 +28,14 @@ export function ProjectDetailView({
         sidebarCollapsed={sidebarCollapsed}
         onProjectUpdated={onProjectUpdated}
         onProjectDeleted={onProjectDeleted}
+        onEnvironmentsChanged={() => setEnvironmentsVersion((v) => v + 1)}
       />
       <div className={styles.body}>
         <div className={styles.row}>
-          <ProjectInfoPanel project={project} />
+          <ProjectInfoPanel project={project} environmentsVersion={environmentsVersion} />
           <ProjectStatsPanel />
         </div>
-        <ProjectTestsSection projectId={project.id} />
+        <ProjectTestsSection projectId={project.id} onSelectTest={onSelectTest} />
       </div>
     </div>
   )

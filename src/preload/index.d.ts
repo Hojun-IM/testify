@@ -7,6 +7,11 @@ import type {
   ProjectSummary,
   ProjectUpdateInput,
   Test,
+  TestCase,
+  TestCaseCreateInput,
+  TestCaseListParams,
+  TestCaseReorderInput,
+  TestCaseUpdateInput,
   TestCreateInput,
   TestListParams,
   TestUpdateInput
@@ -30,6 +35,13 @@ declare global {
         create: (input: TestCreateInput) => Promise<Test>
         update: (input: TestUpdateInput) => Promise<Test>
         remove: (id: string) => Promise<void>
+      }
+      testCases: {
+        list: (params: TestCaseListParams) => Promise<TestCase[]>
+        create: (input: TestCaseCreateInput) => Promise<TestCase>
+        update: (input: TestCaseUpdateInput) => Promise<TestCase>
+        remove: (id: string) => Promise<void>
+        reorder: (input: TestCaseReorderInput) => Promise<void>
       }
     }
   }

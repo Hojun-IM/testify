@@ -1,18 +1,21 @@
 import { useState } from 'react'
-import type { ProjectSummary } from '../../shared/types'
+import type { ProjectSummary, Test } from '../../shared/types'
 import { Sidebar } from './components/layout/Sidebar'
 import { PanelIcon } from './components/ui/icons'
 import { ProjectsView } from './components/projects/ProjectsView'
 import { ProjectDetailView } from './components/projects/ProjectDetailView'
+import { TestCaseListView } from './components/testcases/TestCaseListView'
 import styles from './App.module.css'
 
 function App(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeProject, setActiveProject] = useState<ProjectSummary | null>(null)
   const [recentProjects, setRecentProjects] = useState<ProjectSummary[]>([])
+  const [activeTest, setActiveTest] = useState<Test | null>(null)
 
   function openProject(project: ProjectSummary): void {
     setActiveProject(project)
+    setActiveTest(null)
     setRecentProjects((prev) => [project, ...prev.filter((item) => item.id !== project.id)])
   }
 
@@ -24,6 +27,7 @@ function App(): JSX.Element {
   function handleProjectDeleted(): void {
     setRecentProjects((prev) => prev.filter((item) => item.id !== activeProject?.id))
     setActiveProject(null)
+    setActiveTest(null)
   }
 
   return (
@@ -33,7 +37,10 @@ function App(): JSX.Element {
           onCollapse={() => setSidebarOpen(false)}
           recentProjects={recentProjects}
           onSelectRecent={openProject}
-          onGoToList={() => setActiveProject(null)}
+          onGoToList={() => {
+            setActiveProject(null)
+            setActiveTest(null)
+          }}
         />
       )}
       <main className={`${styles.mainContent} bg-canvas`}>
@@ -47,12 +54,20 @@ function App(): JSX.Element {
             <PanelIcon />
           </button>
         )}
-        {activeProject ? (
+        {activeProject && activeTest ? (
+          <TestCaseListView
+            project={activeProject}
+            test={activeTest}
+            onBack={() => setActiveTest(null)}
+            sidebarCollapsed={!sidebarOpen}
+          />
+        ) : activeProject ? (
           <ProjectDetailView
             project={activeProject}
             sidebarCollapsed={!sidebarOpen}
             onProjectUpdated={handleProjectUpdated}
             onProjectDeleted={handleProjectDeleted}
+            onSelectTest={setActiveTest}
           />
         ) : (
           <ProjectsView onOpenProject={openProject} />
