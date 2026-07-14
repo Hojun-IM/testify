@@ -171,3 +171,34 @@ export function DragHandleIcon({ size = 14 }: IconProps): JSX.Element {
     </svg>
   )
 }
+
+export function RefreshIcon({ size = 16 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <path d="M16.5 10a6.5 6.5 0 1 1-1.9-4.6" />
+      <polyline points="16.5,2.5 16.5,5.9 13.1,5.9" />
+    </svg>
+  )
+}
+
+export function ExpandIcon({ size = 16 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <polyline points="12.5,2.5 17.5,2.5 17.5,7.5" />
+      <line x1="17.5" y1="2.5" x2="11.5" y2="8.5" />
+      <polyline points="7.5,17.5 2.5,17.5 2.5,12.5" />
+      <line x1="2.5" y1="17.5" x2="8.5" y2="11.5" />
+    </svg>
+  )
+}
+
+export function CollapseIcon({ size = 16 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <polyline points="16.5,8.5 11.5,8.5 11.5,3.5" />
+      <line x1="11.5" y1="8.5" x2="17" y2="3" />
+      <polyline points="3.5,11.5 8.5,11.5 8.5,16.5" />
+      <line x1="8.5" y1="11.5" x2="3" y2="17" />
+    </svg>
+  )
+}

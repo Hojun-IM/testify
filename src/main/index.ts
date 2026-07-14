@@ -18,7 +18,9 @@ function createWindow(): void {
     trafficLightPosition: { x: 16, y: 20 },
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
-      sandbox: false
+      sandbox: false,
+      // 대시보드의 임베디드 브라우저(<webview>) 사용을 위해 필요
+      webviewTag: true
     }
   })
 
