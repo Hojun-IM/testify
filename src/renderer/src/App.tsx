@@ -1,19 +1,22 @@
 import { useState } from 'react'
 import type { ProjectSummary, Test } from '../../shared/types'
-import { Sidebar } from './components/layout/Sidebar'
+import { Sidebar, type SidebarTab } from './components/layout/Sidebar'
 import { PanelIcon } from './components/ui/icons'
 import { ProjectsView } from './components/projects/ProjectsView'
 import { ProjectDetailView } from './components/projects/ProjectDetailView'
 import { TestCaseListView } from './components/testcases/TestCaseListView'
+import { DashboardView } from './components/dashboard/DashboardView'
 import styles from './App.module.css'
 
 function App(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [activeTab, setActiveTab] = useState<SidebarTab>('project')
   const [activeProject, setActiveProject] = useState<ProjectSummary | null>(null)
   const [recentProjects, setRecentProjects] = useState<ProjectSummary[]>([])
   const [activeTest, setActiveTest] = useState<Test | null>(null)
 
   function openProject(project: ProjectSummary): void {
+    setActiveTab('project')
     setActiveProject(project)
     setActiveTest(null)
     setRecentProjects((prev) => [project, ...prev.filter((item) => item.id !== project.id)])
@@ -41,6 +44,8 @@ function App(): JSX.Element {
             setActiveProject(null)
             setActiveTest(null)
           }}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
       )}
       <main className={`${styles.mainContent} bg-canvas`}>
@@ -54,7 +59,9 @@ function App(): JSX.Element {
             <PanelIcon />
           </button>
         )}
-        {activeProject && activeTest ? (
+        {activeTab === 'dashboard' ? (
+          <DashboardView sidebarCollapsed={!sidebarOpen} />
+        ) : activeProject && activeTest ? (
           <TestCaseListView
             project={activeProject}
             test={activeTest}

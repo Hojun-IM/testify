@@ -16,7 +16,7 @@ import { MenuList } from '../ui/MenuList'
 import { MenuItem } from '../ui/MenuItem'
 import styles from './Sidebar.module.css'
 
-type Tab = 'project' | 'dashboard' | 'hook'
+export type SidebarTab = 'project' | 'dashboard' | 'hook'
 
 const menuItems = [{ icon: <PlusIcon />, label: '새 프로젝트' }]
 
@@ -29,14 +29,17 @@ export function Sidebar({
   onCollapse,
   recentProjects,
   onSelectRecent,
-  onGoToList
+  onGoToList,
+  activeTab,
+  onTabChange
 }: {
   onCollapse: () => void
   recentProjects: ProjectSummary[]
   onSelectRecent: (project: ProjectSummary) => void
   onGoToList: () => void
+  activeTab: SidebarTab
+  onTabChange: (tab: SidebarTab) => void
 }): JSX.Element {
-  const [activeTab, setActiveTab] = useState<Tab>('project')
   const [moreOpen, setMoreOpen] = useState(false)
 
   return (
@@ -63,7 +66,7 @@ export function Sidebar({
         ]}
         value={activeTab}
         onChange={(tab) => {
-          setActiveTab(tab as Tab)
+          onTabChange(tab as SidebarTab)
           if (tab === 'project') onGoToList()
         }}
       />
