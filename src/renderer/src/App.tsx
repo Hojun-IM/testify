@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ProjectSummary, Test } from '../../shared/types'
+import type { ProjectSummary, Test, TestCase } from '../../shared/types'
 import { Sidebar, type SidebarTab } from './components/layout/Sidebar'
 import { PanelIcon } from './components/ui/icons'
 import { ProjectsView } from './components/projects/ProjectsView'
@@ -14,6 +14,21 @@ function App(): JSX.Element {
   const [activeProject, setActiveProject] = useState<ProjectSummary | null>(null)
   const [recentProjects, setRecentProjects] = useState<ProjectSummary[]>([])
   const [activeTest, setActiveTest] = useState<Test | null>(null)
+  // 테스트 케이스 목록의 "실행"(단건 또는 일괄 선택)에서 대시보드로 넘겨 재생할 케이스들
+  const [autoPlayCases, setAutoPlayCases] = useState<TestCase[] | null>(null)
+
+  function runCasesOnDashboard(testCases: TestCase[]): void {
+    setActiveTab('dashboard')
+    setAutoPlayCases(testCases)
+  }
+
+  // 테스트 목록의 "실행" — 해당 테스트에 속한 자동화 케이스 전체를 대시보드에서 실행
+  async function runTestOnDashboard(test: Test): Promise<void> {
+    const cases = await window.api.testCases.list({ testId: test.id })
+    const runnable = cases.filter((item) => item.steps.some((step) => step.automation))
+    if (runnable.length === 0) return
+    runCasesOnDashboard(runnable)
+  }
 
   function openProject(project: ProjectSummary): void {
     setActiveTab('project')
@@ -60,13 +75,18 @@ function App(): JSX.Element {
           </button>
         )}
         {activeTab === 'dashboard' ? (
-          <DashboardView sidebarCollapsed={!sidebarOpen} />
+          <DashboardView
+            sidebarCollapsed={!sidebarOpen}
+            autoPlayCases={autoPlayCases}
+            onAutoPlayConsumed={() => setAutoPlayCases(null)}
+          />
         ) : activeProject && activeTest ? (
           <TestCaseListView
             project={activeProject}
             test={activeTest}
             onBack={() => setActiveTest(null)}
             sidebarCollapsed={!sidebarOpen}
+            onRunCases={runCasesOnDashboard}
           />
         ) : activeProject ? (
           <ProjectDetailView
@@ -75,6 +95,7 @@ function App(): JSX.Element {
             onProjectUpdated={handleProjectUpdated}
             onProjectDeleted={handleProjectDeleted}
             onSelectTest={setActiveTest}
+            onRunTest={runTestOnDashboard}
           />
         ) : (
           <ProjectsView onOpenProject={openProject} />

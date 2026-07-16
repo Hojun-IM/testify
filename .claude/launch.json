@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 5173
+    },
+    {
+      "name": "dev-debug",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "TESTIFY_DEBUG_PORT=9224 npm run dev"],
+      "port": 5173
     }
   ]
 }

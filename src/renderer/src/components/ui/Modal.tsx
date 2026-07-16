@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { CloseIcon } from './icons'
 import styles from './Modal.module.css'
 
-export type ModalSize = 'sm' | 'md' | 'lg'
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl'
 
 export function Modal({
   open,

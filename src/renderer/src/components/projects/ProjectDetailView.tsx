@@ -11,13 +11,15 @@ export function ProjectDetailView({
   sidebarCollapsed,
   onProjectUpdated,
   onProjectDeleted,
-  onSelectTest
+  onSelectTest,
+  onRunTest
 }: {
   project: ProjectSummary
   sidebarCollapsed?: boolean
   onProjectUpdated: (project: ProjectSummary) => void
   onProjectDeleted: () => void
   onSelectTest: (test: Test) => void
+  onRunTest?: (test: Test) => void
 }): JSX.Element {
   const [environmentsVersion, setEnvironmentsVersion] = useState(0)
 
@@ -35,7 +37,7 @@ export function ProjectDetailView({
           <ProjectInfoPanel project={project} environmentsVersion={environmentsVersion} />
           <ProjectStatsPanel />
         </div>
-        <ProjectTestsSection projectId={project.id} onSelectTest={onSelectTest} />
+        <ProjectTestsSection projectId={project.id} onSelectTest={onSelectTest} onRunTest={onRunTest} />
       </div>
     </div>
   )

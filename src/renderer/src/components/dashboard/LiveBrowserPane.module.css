@@ -47,13 +47,9 @@
   color: var(--color-ivory);
 }
 
-.caseName {
-  flex-shrink: 0;
-  max-width: 180px;
-  font-size: 11px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.toolActive {
+  color: var(--color-clay-300);
+  background-color: var(--color-overlay);
 }
 
 .liveBadge {
@@ -66,11 +62,6 @@
   color: var(--color-clay-300);
   background-color: color-mix(in srgb, var(--color-clay-500) 18%, transparent);
   animation: blink 1.4s ease-in-out infinite;
-}
-
-.apiBadge {
-  color: var(--color-ok);
-  background-color: color-mix(in srgb, var(--color-ok) 15%, transparent);
 }
 
 .viewport {
@@ -101,118 +92,6 @@
   pointer-events: none;
 }
 
-/* ── 가상 커서 (E2E 실행 중 오버레이) ── */
-
-.cursor {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  margin: -6px 0 0 -6px;
-  border: 2px solid var(--color-ivory);
-  border-radius: 50%;
-  background-color: color-mix(in srgb, var(--color-ivory) 30%, transparent);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
-  transition:
-    top 550ms cubic-bezier(0.22, 1, 0.36, 1),
-    left 550ms cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.cursorPulse {
-  position: absolute;
-  inset: -6px;
-  border: 2px solid var(--color-clay-400);
-  border-radius: 50%;
-  animation: clickPulse 700ms ease-out 550ms;
-  opacity: 0;
-}
-
-/* ── API 실행 콘솔 (API 테스트 중 오버레이) ── */
-
-.apiOverlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-
-.apiList {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 14px 16px;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
-
-.apiRow {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  animation: fadeUp 250ms ease;
-}
-
-.apiMethod {
-  flex-shrink: 0;
-  width: 44px;
-  padding: 2px 0;
-  border-radius: 4px;
-  text-align: center;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-}
-
-.methodGet {
-  color: var(--color-ok);
-  background-color: color-mix(in srgb, var(--color-ok) 15%, transparent);
-}
-
-.methodMutate {
-  color: var(--color-clay-300);
-  background-color: color-mix(in srgb, var(--color-clay-500) 18%, transparent);
-}
-
-.apiPath {
-  flex: 1;
-  min-width: 0;
-  font-family: 'SF Mono', Menlo, monospace;
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.apiPending {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-}
-
-.apiResult {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  animation: fadeUp 200ms ease;
-}
-
-.spinner {
-  width: 10px;
-  height: 10px;
-  border: 2px solid var(--color-line);
-  border-top-color: var(--color-clay-500);
-  border-radius: 50%;
-  animation: spin 800ms linear infinite;
-}
-
 @keyframes blink {
   0%,
   100% {
@@ -223,30 +102,3 @@
   }
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes clickPulse {
-  0% {
-    opacity: 1;
-    transform: scale(0.6);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.8);
-  }
-}

@@ -77,6 +77,27 @@
   flex-shrink: 0;
 }
 
+.selectCol {
+  width: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--color-clay-500);
+  cursor: pointer;
+}
+
+.checkbox:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
 .titleCol {
   flex: 1;
   min-width: 0;

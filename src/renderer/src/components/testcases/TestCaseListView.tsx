@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ProjectSummary, Test, TestCase } from '../../../../shared/types'
-import { ChevronLeftIcon } from '../ui/icons'
+import { ChevronLeftIcon, PlayIcon } from '../ui/icons'
 import { SearchInput } from '../ui/SearchInput'
 import { Button } from '../ui/Button'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
@@ -12,16 +12,20 @@ export function TestCaseListView({
   project,
   test,
   onBack,
-  sidebarCollapsed
+  sidebarCollapsed,
+  onRunCases
 }: {
   project: ProjectSummary
   test: Test
   onBack: () => void
   sidebarCollapsed?: boolean
+  onRunCases?: (testCases: TestCase[]) => void
 }): JSX.Element {
   const [search, setSearch] = useState('')
   const [cases, setCases] = useState<TestCase[]>([])
   const casesRef = useRef<TestCase[]>([])
+  // 일괄 실행을 위해 체크박스로 선택한 케이스 id 목록 (자동화 스텝이 있는 케이스만 선택 가능)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const [panelOpen, setPanelOpen] = useState(false)
   const [panelMode, setPanelMode] = useState<'create' | 'edit'>('create')
@@ -51,6 +55,46 @@ export function TestCaseListView({
       clearTimeout(timer)
     }
   }, [test.id, search])
+
+  // 목록이 갱신되면 이미 사라진 케이스의 선택 상태를 정리한다
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const next = new Set([...prev].filter((id) => cases.some((item) => item.id === id)))
+      return next.size === prev.size ? prev : next
+    })
+  }, [cases])
+
+  function toggleSelect(testCase: TestCase): void {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(testCase.id)) next.delete(testCase.id)
+      else next.add(testCase.id)
+      return next
+    })
+  }
+
+  const runnableCases = cases.filter((item) => item.steps.some((step) => step.automation))
+
+  function toggleSelectAll(): void {
+    setSelectedIds((prev) =>
+      prev.size >= runnableCases.length && runnableCases.length > 0
+        ? new Set()
+        : new Set(runnableCases.map((item) => item.id))
+    )
+  }
+
+  function runSelected(): void {
+    const selected = cases.filter((item) => selectedIds.has(item.id))
+    if (selected.length === 0) return
+    setSelectedIds(new Set())
+    onRunCases?.(selected)
+  }
+
+  function runAllCases(): void {
+    if (runnableCases.length === 0) return
+    setSelectedIds(new Set())
+    onRunCases?.(runnableCases)
+  }
 
   function openCreatePanel(): void {
     setPanelMode('create')
@@ -120,7 +164,17 @@ export function TestCaseListView({
             <div className={styles.right}>
               <Button variant="ghost">Export</Button>
               <Button variant="ghost">Import</Button>
-              <Button onClick={openCreatePanel}>새 테스트 케이스</Button>
+              <Button onClick={openCreatePanel}>새 케이스</Button>
+              {onRunCases && selectedIds.size > 0 && (
+                <Button variant="ghost" onClick={runSelected}>
+                  <PlayIcon size={13} /> 선택 실행 ({selectedIds.size})
+                </Button>
+              )}
+              {onRunCases && (
+                <Button onClick={runAllCases} disabled={runnableCases.length === 0}>
+                  <PlayIcon size={13} /> 전체 실행
+                </Button>
+              )}
             </div>
           </div>
 
@@ -131,6 +185,10 @@ export function TestCaseListView({
             onRowClick={openEditPanel}
             onEdit={openEditPanel}
             onDelete={setDeletingCase}
+            onRun={onRunCases ? (testCase) => onRunCases([testCase]) : undefined}
+            selectedIds={selectedIds}
+            onToggleSelect={onRunCases ? toggleSelect : undefined}
+            onToggleSelectAll={onRunCases ? toggleSelectAll : undefined}
           />
         </div>
       </div>
@@ -140,6 +198,8 @@ export function TestCaseListView({
         onClose={() => setPanelOpen(false)}
         onSubmit={handlePanelSubmit}
         mode={panelMode}
+        testType={test.type}
+        sidebarCollapsed={sidebarCollapsed}
         initialValues={
           panelMode === 'edit' && editingCase
             ? {

@@ -32,6 +32,12 @@
   width: 640px;
 }
 
+/* 임베디드 브라우저 등 화면을 크게 쓰는 모달 */
+.xl {
+  width: min(1240px, calc(100vw - 48px));
+  height: calc(100vh - 64px);
+}
+
 .header {
   flex-shrink: 0;
   display: flex;

@@ -8,6 +8,7 @@ import type {
   TestCasePolicy,
   TestCaseReorderInput,
   TestCaseStep,
+  TestCaseStepAutomation,
   TestCaseUpdateInput
 } from '../../shared/types'
 
@@ -28,10 +29,27 @@ const DEFAULT_POLICY: TestCasePolicy = {
 // 앱을 거치지 않고 직접 삽입되었거나 이전 스키마로 저장된 행은 policy/steps가 불완전할 수 있어
 // 항상 완전한 형태로 정규화해서 내려준다 (그렇지 않으면 프론트에서 예: policy.targetEnvs가
 // undefined가 되어 렌더링이 깨진다)
+function normalizeAutomation(raw: unknown): TestCaseStepAutomation | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const partial = raw as Partial<TestCaseStepAutomation>
+  if (typeof partial.actionType !== 'string' || typeof partial.selector !== 'string') return undefined
+  return {
+    actionType: partial.actionType,
+    selector: partial.selector,
+    ...(typeof partial.value === 'string' ? { value: partial.value } : {})
+  }
+}
+
 function normalizeStep(step: unknown): TestCaseStep {
   if (step && typeof step === 'object') {
     const partial = step as Partial<TestCaseStep>
-    return { action: partial.action ?? '', expected: partial.expected ?? '', outcome: partial.outcome ?? '' }
+    const automation = normalizeAutomation(partial.automation)
+    return {
+      action: partial.action ?? '',
+      expected: partial.expected ?? '',
+      outcome: partial.outcome ?? '',
+      ...(automation ? { automation } : {})
+    }
   }
   return { action: typeof step === 'string' ? step : '', expected: '', outcome: '' }
 }
