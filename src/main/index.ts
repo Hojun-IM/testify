@@ -7,6 +7,17 @@ import { registerTestCaseHandlers } from './ipc/testCases'
 
 const isDev = !app.isPackaged
 
+// dev에서는 vite가 unsafe-eval을 쓰고 CSP가 없어서 Electron이 렌더러/웹뷰마다
+// "Electron Security Warning"을 콘솔에 찍는다. 패키징 빌드에는 원래 뜨지 않는 경고라 dev에서만 끈다
+if (isDev) {
+  process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
+}
+
+// 개발 편의: TESTIFY_DEBUG_PORT 환경변수가 설정된 경우에만 CDP 원격 디버깅 포트를 연다
+if (isDev && process.env.TESTIFY_DEBUG_PORT) {
+  app.commandLine.appendSwitch('remote-debugging-port', process.env.TESTIFY_DEBUG_PORT)
+}
+
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1200,
