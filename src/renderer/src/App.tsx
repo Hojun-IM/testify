@@ -6,6 +6,7 @@ import { ProjectsView } from './components/projects/ProjectsView'
 import { ProjectDetailView } from './components/projects/ProjectDetailView'
 import { TestCaseListView } from './components/testcases/TestCaseListView'
 import { DashboardView } from './components/dashboard/DashboardView'
+import { HooksView } from './components/hooks/HooksView'
 import styles from './App.module.css'
 
 function App(): JSX.Element {
@@ -80,6 +81,8 @@ function App(): JSX.Element {
             autoPlayCases={autoPlayCases}
             onAutoPlayConsumed={() => setAutoPlayCases(null)}
           />
+        ) : activeTab === 'hook' ? (
+          <HooksView sidebarCollapsed={!sidebarOpen} />
         ) : activeProject && activeTest ? (
           <TestCaseListView
             project={activeProject}
@@ -98,7 +101,7 @@ function App(): JSX.Element {
             onRunTest={runTestOnDashboard}
           />
         ) : (
-          <ProjectsView onOpenProject={openProject} />
+          <ProjectsView onOpenProject={openProject} sidebarCollapsed={!sidebarOpen} />
         )}
       </main>
     </div>

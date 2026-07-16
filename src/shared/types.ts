@@ -190,3 +190,60 @@ export type TestCaseReorderInput = {
   test_id: string
   ordered_ids: string[]
 }
+
+// ── 훅 ──────────────────────────────────────────────────────────
+// 여러 테스트 케이스에서 반복되는 공통 시나리오(로그인, 데이터 초기화 등)를
+// 한 곳에서 만들어두고 재사용하기 위한 단위.
+// - 전역 훅: project_id가 null — 사이드바 훅 탭에서 관리하고, 각 테스트에 불러와(연결해) 사용
+// - 프로젝트 훅: project_id 보유 — 해당 프로젝트 안에서만 사용
+
+export type HookTiming = 'beforeAll' | 'beforeEach' | 'afterEach' | 'afterAll' | 'onFailure'
+
+export type Hook = {
+  id: string
+  project_id: string | null
+  name: string
+  description: string | null
+  type: TestType
+  timing: HookTiming
+  enabled: boolean
+  // 테스트 케이스와 동일한 스텝 구조 — 자동화 바인딩(automation)을 그대로 재사용한다
+  steps: TestCaseStep[]
+  // e2e 훅 재생 시작 URL (api 훅에는 없음)
+  start_url: string | null
+  order_index: number
+  created_dt: string
+  updated_dt: string
+  created_by: string
+  updated_by: string
+}
+
+export type HookListParams = {
+  // 생략(또는 null)하면 전역 훅만, 지정하면 해당 프로젝트의 훅만 조회
+  projectId?: string | null
+  type?: TestType | 'all'
+  timing?: HookTiming | 'all'
+  search?: string
+}
+
+export type HookCreateInput = {
+  // null이면 전역 훅
+  project_id: string | null
+  name: string
+  description: string
+  type: TestType
+  timing: HookTiming
+  enabled: boolean
+  steps: TestCaseStep[]
+  start_url?: string | null
+}
+
+export type HookUpdateInput = HookCreateInput & {
+  id: string
+}
+
+// 테스트에 불러와 연결한 전역 훅 목록을 통째로 교체한다
+export type TestHooksSetInput = {
+  test_id: string
+  hook_ids: string[]
+}

@@ -16,13 +16,15 @@ export function ProjectFormModal({
   onClose,
   onSubmit,
   mode = 'create',
-  initialValues
+  initialValues,
+  sidebarCollapsed
 }: {
   open: boolean
   onClose: () => void
   onSubmit: (values: ProjectFormValues) => Promise<void>
   mode?: 'create' | 'edit'
   initialValues?: ProjectFormValues
+  sidebarCollapsed?: boolean
 }): JSX.Element {
   const [name, setName] = useState('')
   const [environments, setEnvironments] = useState<ProjectEnvironmentInput[]>([])
@@ -72,6 +74,7 @@ export function ProjectFormModal({
       size="lg"
       icon={<FolderIcon />}
       title={isEdit ? '프로젝트 수정' : '새 프로젝트'}
+      sidebarCollapsed={sidebarCollapsed}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>

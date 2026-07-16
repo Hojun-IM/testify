@@ -16,9 +16,11 @@ const filterOptions: DropdownOption[] = [
 ]
 
 export function ProjectsView({
-  onOpenProject
+  onOpenProject,
+  sidebarCollapsed
 }: {
   onOpenProject: (project: ProjectSummary) => void
+  sidebarCollapsed?: boolean
 }): JSX.Element {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
@@ -134,6 +136,7 @@ export function ProjectsView({
             ? { name: editingProject.name, environments: editingEnvironments }
             : undefined
         }
+        sidebarCollapsed={sidebarCollapsed}
       />
       <ConfirmDialog
         open={!!deletingProject}
@@ -142,6 +145,7 @@ export function ProjectsView({
         title="프로젝트 삭제"
         description={`"${deletingProject?.name}" 프로젝트를 삭제하면 프로젝트에 속한 모든 테스트, 테스트 케이스, 실행 기록이 함께 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
         confirmLabel="영구 삭제"
+        sidebarCollapsed={sidebarCollapsed}
       />
     </>
   )

@@ -77,6 +77,7 @@ export function ProjectDetailHeader({
         onSubmit={handleEditSubmit}
         mode="edit"
         initialValues={{ name: project.name, environments: editEnvironments }}
+        sidebarCollapsed={sidebarCollapsed}
       />
       <ConfirmDialog
         open={deleteOpen}
@@ -85,6 +86,7 @@ export function ProjectDetailHeader({
         title="프로젝트 삭제"
         description={`"${project.name}" 프로젝트를 삭제하면 프로젝트에 속한 모든 테스트, 테스트 케이스, 실행 기록이 함께 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
         confirmLabel="영구 삭제"
+        sidebarCollapsed={sidebarCollapsed}
       />
     </>
   )

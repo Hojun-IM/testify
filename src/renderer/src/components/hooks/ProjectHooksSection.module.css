@@ -7,8 +7,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  /* 상단 여백은 위의 테스트/훅 탭(sectionTabs)이 담당한다 */
-  padding: 6px 0 30px;
 }
 
 .controlsRow {
@@ -29,6 +27,13 @@
   gap: 8px;
 }
 
-.footer {
-  display: flex;
+.timingBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-clay-300);
+  background-color: color-mix(in srgb, var(--color-clay-500) 15%, transparent);
 }

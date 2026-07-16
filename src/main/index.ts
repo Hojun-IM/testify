@@ -5,6 +5,7 @@ import { registerProjectHandlers } from './ipc/projects'
 import { registerTestHandlers } from './ipc/tests'
 import { registerTestCaseHandlers } from './ipc/testCases'
 import { registerHttpHandlers } from './ipc/http'
+import { registerHookHandlers } from './ipc/hooks'
 
 const isDev = !app.isPackaged
 
@@ -58,6 +59,7 @@ app.whenReady().then(() => {
   registerTestHandlers()
   registerTestCaseHandlers()
   registerHttpHandlers()
+  registerHookHandlers()
   createWindow()
 
   app.on('activate', function () {

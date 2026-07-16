@@ -1,5 +1,9 @@
 import type {
   ApiRequestSpec,
+  Hook,
+  HookCreateInput,
+  HookListParams,
+  HookUpdateInput,
   HttpRequestResult,
   Project,
   ProjectCreateInput,
@@ -15,6 +19,7 @@ import type {
   TestCaseReorderInput,
   TestCaseUpdateInput,
   TestCreateInput,
+  TestHooksSetInput,
   TestListParams,
   TestUpdateInput
 } from '../shared/types'
@@ -44,6 +49,14 @@ declare global {
         update: (input: TestCaseUpdateInput) => Promise<TestCase>
         remove: (id: string) => Promise<void>
         reorder: (input: TestCaseReorderInput) => Promise<void>
+      }
+      hooks: {
+        list: (params?: HookListParams) => Promise<Hook[]>
+        create: (input: HookCreateInput) => Promise<Hook>
+        update: (input: HookUpdateInput) => Promise<Hook>
+        remove: (id: string) => Promise<void>
+        listForTest: (testId: string) => Promise<Hook[]>
+        setForTest: (input: TestHooksSetInput) => Promise<void>
       }
       http: {
         request: (spec: ApiRequestSpec) => Promise<HttpRequestResult>

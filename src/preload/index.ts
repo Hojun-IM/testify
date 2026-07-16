@@ -1,6 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type {
   ApiRequestSpec,
+  HookCreateInput,
+  HookListParams,
+  HookUpdateInput,
   ProjectCreateInput,
   ProjectListParams,
   ProjectStatus,
@@ -10,6 +13,7 @@ import type {
   TestCaseReorderInput,
   TestCaseUpdateInput,
   TestCreateInput,
+  TestHooksSetInput,
   TestListParams,
   TestUpdateInput
 } from '../shared/types'
@@ -36,6 +40,14 @@ const api = {
     update: (input: TestCaseUpdateInput) => ipcRenderer.invoke('testCases:update', input),
     remove: (id: string) => ipcRenderer.invoke('testCases:remove', id),
     reorder: (input: TestCaseReorderInput) => ipcRenderer.invoke('testCases:reorder', input)
+  },
+  hooks: {
+    list: (params?: HookListParams) => ipcRenderer.invoke('hooks:list', params ?? {}),
+    create: (input: HookCreateInput) => ipcRenderer.invoke('hooks:create', input),
+    update: (input: HookUpdateInput) => ipcRenderer.invoke('hooks:update', input),
+    remove: (id: string) => ipcRenderer.invoke('hooks:remove', id),
+    listForTest: (testId: string) => ipcRenderer.invoke('hooks:listForTest', testId),
+    setForTest: (input: TestHooksSetInput) => ipcRenderer.invoke('hooks:setForTest', input)
   },
   http: {
     request: (spec: ApiRequestSpec) => ipcRenderer.invoke('http:request', spec)
