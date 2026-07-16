@@ -22,7 +22,11 @@ function formatDateTime(iso: string): string {
   return iso.replace('T', ' ').slice(0, 16)
 }
 
-function buildColumns(onEdit: (test: Test) => void, onDelete: (test: Test) => void): TableColumn<Test>[] {
+function buildColumns(
+  onEdit: (test: Test) => void,
+  onDelete: (test: Test) => void,
+  onRun?: (test: Test) => void
+): TableColumn<Test>[] {
   return [
     { key: 'name', header: '이름', render: (row) => row.name },
     { key: 'type', header: '타입', width: '80px', render: (row) => row.type.toUpperCase() },
@@ -49,6 +53,8 @@ function buildColumns(onEdit: (test: Test) => void, onDelete: (test: Test) => vo
           <IconMenuButton
             ariaLabel="테스트 설정"
             items={[
+              // e2e 테스트는 소속 케이스 전체(자동화 스텝 보유분)를 대시보드에서 실행할 수 있다
+              ...(onRun && row.type === 'e2e' ? [{ label: '실행', onClick: () => onRun(row) }] : []),
               { label: '수정', onClick: () => onEdit(row) },
               { label: '삭제', onClick: () => onDelete(row), danger: true }
             ]}
@@ -61,10 +67,13 @@ function buildColumns(onEdit: (test: Test) => void, onDelete: (test: Test) => vo
 
 export function ProjectTestsSection({
   projectId,
-  onSelectTest
+  onSelectTest,
+  onRunTest
 }: {
   projectId: string
   onSelectTest: (test: Test) => void
+  // 테스트에 속한 자동화 케이스 전체를 대시보드에서 실행
+  onRunTest?: (test: Test) => void
 }): JSX.Element {
   const [search, setSearch] = useState('')
   const [type, setType] = useState('all')
@@ -138,7 +147,7 @@ export function ProjectTestsSection({
     await refreshTests()
   }
 
-  const columns = buildColumns(openEditModal, setDeletingTest)
+  const columns = buildColumns(openEditModal, setDeletingTest, onRunTest)
 
   return (
     <div className={styles.section}>
