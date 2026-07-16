@@ -115,7 +115,8 @@ export function DashboardView({
             actionType: scenarioStep.actionType,
             selector: scenarioStep.selector,
             value: scenarioStep.value,
-            label: `${step.action}${step.expected ? ` — ${step.expected}` : ''}`
+            label: `${step.action}${step.expected ? ` — ${step.expected}` : ''}`,
+            request: step.automation!.request
           }
         })
       return {
@@ -135,6 +136,7 @@ export function DashboardView({
       runnable.map((testCase) => ({
         id: testCase.id,
         name: testCase.name,
+        kind: testCase.steps.some((step) => step.automation?.actionType === 'api-request') ? 'api' : 'e2e',
         status: 'pending',
         durationMs: null,
         failMessage: null
@@ -168,8 +170,8 @@ export function DashboardView({
   function handlePlaybackEvent(event: PlaybackEvent): void {
     if (event.kind === 'case-start') {
       patchPlayCase(event.caseId, { status: 'running' })
-      const name = playCasesRef.current.find((item) => item.id === event.caseId)?.name ?? event.caseId
-      appendPlayLog('info', `▶ [E2E] ${name} 실행 시작`, event.caseId)
+      const runCase = playCasesRef.current.find((item) => item.id === event.caseId)
+      appendPlayLog('info', `▶ [${runCase?.kind === 'api' ? 'API' : 'E2E'}] ${runCase?.name ?? event.caseId} 실행 시작`, event.caseId)
       return
     }
     if (event.kind === 'step-result') {

@@ -211,6 +211,15 @@ export function PlayIcon({ size = 16 }: IconProps): JSX.Element {
   )
 }
 
+export function SendIcon({ size = 16 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <path d="M17.5 2.5 2.5 9l6 2.5 2.5 6z" />
+      <line x1="8.5" y1="11.5" x2="17.5" y2="2.5" />
+    </svg>
+  )
+}
+
 export function TargetIcon({ size = 16 }: IconProps): JSX.Element {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" {...base}>

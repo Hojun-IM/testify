@@ -4,6 +4,7 @@ import { getDb } from './db'
 import { registerProjectHandlers } from './ipc/projects'
 import { registerTestHandlers } from './ipc/tests'
 import { registerTestCaseHandlers } from './ipc/testCases'
+import { registerHttpHandlers } from './ipc/http'
 
 const isDev = !app.isPackaged
 
@@ -56,6 +57,7 @@ app.whenReady().then(() => {
   registerProjectHandlers()
   registerTestHandlers()
   registerTestCaseHandlers()
+  registerHttpHandlers()
   createWindow()
 
   app.on('activate', function () {

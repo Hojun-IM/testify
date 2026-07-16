@@ -89,12 +89,58 @@ export type TestCasePolicy = {
   automationStartUrl?: string
 }
 
-// 요소 선택 모드로 기록된 스텝을 실제 브라우저에서 재생하기 위한 실행 정보.
+export type ApiKeyValue = {
+  key: string
+  value: string
+  description: string
+  enabled: boolean
+}
+
+export type ApiAuth =
+  | { type: 'none' }
+  | { type: 'bearer'; token: string }
+  | { type: 'basic'; username: string; password: string }
+
+export type ApiBodyMode = 'none' | 'json' | 'text' | 'form'
+
+export type ApiRequestBody = {
+  mode: ApiBodyMode
+  content: string
+}
+
+// API 케이스 빌더(포스트맨 스타일)에서 구성한 요청 하나의 스펙.
+// 재생 시 이 스펙 그대로 메인 프로세스에서 실제 HTTP 요청을 보낸다
+export type ApiRequestSpec = {
+  method: string
+  url: string
+  params: ApiKeyValue[]
+  headers: ApiKeyValue[]
+  auth: ApiAuth
+  body: ApiRequestBody
+  // 지정하면 재생 시 이 상태 코드와 정확히 일치해야 통과. 비어 있으면 2xx/3xx를 통과로 본다
+  expectedStatus?: number
+}
+
+// 메인 프로세스가 실제로 보낸 HTTP 요청의 응답 (API 빌더의 즉시 테스트, 재생 양쪽에서 공용)
+export type HttpRequestResult = {
+  ok: boolean
+  status: number | null
+  statusText: string
+  headers: Record<string, string>
+  body: string
+  durationMs: number
+  error?: string
+}
+
+// 요소 선택 모드(E2E)로 기록되었거나 API 빌더로 등록된 스텝을 실제로 재생하기 위한 실행 정보.
 // action/expected/outcome은 사람이 읽는 표시용 텍스트이고, automation은 실행 바인딩이다.
 export type TestCaseStepAutomation = {
+  // E2E: click/fill/goto 등 DOM 액션 타입. API: 'api-request' 고정
   actionType: string
   selector: string
   value?: string
+  // actionType이 'api-request'일 때만 채워진다
+  request?: ApiRequestSpec
 }
 
 export type TestCaseStep = {
