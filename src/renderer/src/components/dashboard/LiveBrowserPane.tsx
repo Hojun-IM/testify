@@ -7,6 +7,7 @@ import {
   RefreshIcon,
   TargetIcon
 } from '../ui/icons'
+import type { ApiRequestSpec } from '../../../../shared/types'
 import {
   NETWORK_HOOK_SCRIPT,
   NETWORK_PREFIX,
@@ -126,6 +127,8 @@ export type PlaybackStep = {
   value?: string
   // 실행 로그에 표시할 스텝 이름 (예: "클릭 — a \\"Learn more\\"")
   label: string
+  // actionType이 'api-request'일 때만 채워진다
+  request?: ApiRequestSpec
 }
 
 // 하나의 테스트 케이스에 해당하는 재생 단위. 여러 케이스를 넘기면 순서대로 이어서 실행된다
@@ -337,6 +340,23 @@ export function LiveBrowserPane({
     playbackTokenRef.current = playbackRequest.token
 
     async function runStep(step: PlaybackStep): Promise<StepResult> {
+      if (step.actionType === 'api-request') {
+        if (!step.request) return { ok: false, error: 'API 요청 정보가 없습니다' }
+        const result = await window.api.http.request(step.request)
+        // API 응답도 다른 네트워크 활동과 함께 네트워크 탭에서 확인할 수 있도록 전달
+        networkCbRef.current?.({
+          method: step.request.method,
+          url: step.request.url,
+          status: result.status,
+          failed: !result.ok
+        })
+        if (result.error) return { ok: false, error: result.error }
+        const pass =
+          step.request.expectedStatus !== undefined
+            ? result.status === step.request.expectedStatus
+            : result.status !== null && result.status < 400
+        return { ok: pass, error: pass ? undefined : `status ${result.status ?? 'ERR'}` }
+      }
       if (step.actionType === 'goto') {
         if (!step.value) return { ok: false, error: '이동할 주소가 없습니다' }
         const target = normalizeUrl(step.value)

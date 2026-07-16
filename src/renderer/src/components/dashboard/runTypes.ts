@@ -6,6 +6,8 @@ export type RunCaseStatus = 'pending' | 'running' | 'passed' | 'failed'
 export type RunCase = {
   id: string
   name: string
+  // 실행 로그 태그(예: [E2E]/[API]) 표시에 쓰는, 스텝 구성으로 판별한 케이스 종류
+  kind: 'e2e' | 'api'
   status: RunCaseStatus
   durationMs: number | null
   failMessage: string | null

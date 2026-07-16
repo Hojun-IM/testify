@@ -4,8 +4,9 @@ import { SlidePanel } from '../ui/SlidePanel'
 import { Button } from '../ui/Button'
 import { TextField } from '../ui/TextField'
 import { type DropdownOption } from '../ui/Dropdown'
-import { CodeIcon, PlusIcon, CloseIcon, TargetIcon } from '../ui/icons'
+import { CodeIcon, PlusIcon, CloseIcon, SendIcon, TargetIcon } from '../ui/icons'
 import { CaseRecorderModal } from './CaseRecorderModal'
+import { ApiRecorderModal } from './ApiRecorderModal'
 import styles from './TestCaseFormPanel.module.css'
 
 const STATUS_OPTIONS: DropdownOption[] = [
@@ -60,6 +61,7 @@ export function TestCaseFormPanel({
   const [policy, setPolicy] = useState<TestCasePolicy>(DEFAULT_POLICY)
   const [submitting, setSubmitting] = useState(false)
   const [recorderOpen, setRecorderOpen] = useState(false)
+  const [apiRecorderOpen, setApiRecorderOpen] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -71,7 +73,10 @@ export function TestCaseFormPanel({
       setPolicy(initialValues?.policy ?? DEFAULT_POLICY)
     }
     // 패널이 닫히면 기록 오버레이도 함께 닫는다
-    if (!open) setRecorderOpen(false)
+    if (!open) {
+      setRecorderOpen(false)
+      setApiRecorderOpen(false)
+    }
     // 패널이 열릴 때만 초기값으로 리셋한다 (열려 있는 동안 initialValues 재생성으로 인한 입력값 덮어쓰기 방지)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
@@ -96,6 +101,12 @@ export function TestCaseFormPanel({
     if (pageUrl) {
       setPolicy((prev) => ({ ...prev, automationStartUrl: prev.automationStartUrl || pageUrl }))
     }
+  }
+
+  // API 요청 빌더에서 "시나리오에 추가"를 누를 때마다 스텝 하나를 끝에 붙인다.
+  // 브라우저 기록과 같은 단일 소스 append 패턴 — 폼에서 지운 스텝이 되살아나지 않는다
+  function appendApiStep(step: TestCaseStep): void {
+    setSteps((prev) => [...prev, step])
   }
 
   async function handleSubmit(): Promise<void> {
@@ -136,6 +147,7 @@ export function TestCaseFormPanel({
   function handlePanelClose(): void {
     if (document.querySelector('[data-element-action-menu]')) return
     if (recorderOpen) setRecorderOpen(false)
+    else if (apiRecorderOpen) setApiRecorderOpen(false)
     else onClose()
   }
 
@@ -249,6 +261,15 @@ export function TestCaseFormPanel({
             <TargetIcon size={13} /> 브라우저로 기록
           </button>
         )}
+        {testType === 'api' && (
+          <button
+            type="button"
+            className={`${styles.addStepBtn} ${styles.recordBtn} border-line`}
+            onClick={() => setApiRecorderOpen(true)}
+          >
+            <SendIcon size={13} /> API 요청 작성
+          </button>
+        )}
       </div>
 
       <label className={styles.field} style={{ marginTop: 16 }}>
@@ -266,6 +287,12 @@ export function TestCaseFormPanel({
         open={recorderOpen}
         onClose={() => setRecorderOpen(false)}
         onAddStep={appendRecordedStep}
+        sidebarCollapsed={sidebarCollapsed}
+      />
+      <ApiRecorderModal
+        open={apiRecorderOpen}
+        onClose={() => setApiRecorderOpen(false)}
+        onAddStep={appendApiStep}
         sidebarCollapsed={sidebarCollapsed}
       />
     </SlidePanel>
