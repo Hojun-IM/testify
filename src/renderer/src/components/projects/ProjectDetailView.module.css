@@ -21,3 +21,14 @@
   max-width: calc(100% - 32px);
   margin: 16px auto 0;
 }
+
+.sectionTabs {
+  box-sizing: border-box;
+  width: 780px;
+  max-width: calc(100% - 32px);
+  margin: 24px auto 0;
+}
+
+.hooksWrap {
+  padding: 6px 0 30px;
+}
