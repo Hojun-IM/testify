@@ -97,7 +97,8 @@ function normalizeAutomation(raw: unknown): TestCaseStepAutomation | undefined {
   }
 }
 
-function normalizeStep(step: unknown): TestCaseStep {
+// 훅(hooks IPC)도 케이스와 동일한 스텝 구조를 저장하므로 정규화 로직을 공유한다
+export function normalizeStep(step: unknown): TestCaseStep {
   if (step && typeof step === 'object') {
     const partial = step as Partial<TestCaseStep>
     const automation = normalizeAutomation(partial.automation)
