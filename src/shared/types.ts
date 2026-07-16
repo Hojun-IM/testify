@@ -85,12 +85,23 @@ export type TestCasePolicy = {
   retryCount: number
   timeoutSec: number
   notifyOnFailure: boolean
+  // 대시보드 요소 선택 모드로 기록된 자동화 시나리오를 재생할 때 처음 열 URL
+  automationStartUrl?: string
+}
+
+// 요소 선택 모드로 기록된 스텝을 실제 브라우저에서 재생하기 위한 실행 정보.
+// action/expected/outcome은 사람이 읽는 표시용 텍스트이고, automation은 실행 바인딩이다.
+export type TestCaseStepAutomation = {
+  actionType: string
+  selector: string
+  value?: string
 }
 
 export type TestCaseStep = {
   action: string
   expected: string
   outcome: string
+  automation?: TestCaseStepAutomation
 }
 
 export type TestCase = {
