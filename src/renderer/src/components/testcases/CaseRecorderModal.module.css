@@ -1,0 +1,61 @@
+.overlay {
+  position: fixed;
+  top: 12px;
+  bottom: 12px;
+  /* 남은 콘텐츠 영역이 너무 좁으면(작은 창) right 인셋을 포기하고 최소 폭을 확보한다 */
+  min-width: 480px;
+  /* left/right는 사이드바/케이스 패널 폭에 맞춰 인라인 스타일로 지정 */
+  /* SlidePanel backdrop(z-100) 위, 케이스 패널 영역은 침범하지 않는다 */
+  z-index: 110;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 16px;
+  border-bottom: 1px solid;
+}
+
+.title {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.hint {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.layout {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+}
+
+.browserArea {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}

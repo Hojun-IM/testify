@@ -32,7 +32,11 @@ export function TestCaseTable({
   onReorderCommit,
   onRowClick,
   onEdit,
-  onDelete
+  onDelete,
+  onRun,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll
 }: {
   cases: TestCase[]
   onReorderPreview: (fromIndex: number, toIndex: number) => void
@@ -40,6 +44,11 @@ export function TestCaseTable({
   onRowClick: (testCase: TestCase) => void
   onEdit: (testCase: TestCase) => void
   onDelete: (testCase: TestCase) => void
+  onRun?: (testCase: TestCase) => void
+  // 일괄 실행용 선택 상태 (자동화 스텝이 있는 케이스만 체크 가능)
+  selectedIds?: Set<string>
+  onToggleSelect?: (testCase: TestCase) => void
+  onToggleSelectAll?: () => void
 }): JSX.Element {
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [, forceRender] = useState(0)
@@ -111,10 +120,25 @@ export function TestCaseTable({
     return <div className={`${styles.empty} border-line text-ivory-faint`}>테스트 케이스가 없습니다.</div>
   }
 
+  const runnableCount = cases.filter((item) => item.steps.some((step) => step.automation)).length
+  const showSelect = !!onToggleSelect
+
   return (
     <div className={`${styles.table} border-line`}>
       <div className={`${styles.headerRow} border-line`}>
         <span className={styles.handleCol} />
+        {showSelect && (
+          <span className={styles.selectCol}>
+            <input
+              type="checkbox"
+              className={styles.checkbox}
+              aria-label="자동화 케이스 전체 선택"
+              disabled={runnableCount === 0}
+              checked={runnableCount > 0 && (selectedIds?.size ?? 0) >= runnableCount}
+              onChange={() => onToggleSelectAll?.()}
+            />
+          </span>
+        )}
         <span className={`${styles.headerCell} ${styles.orderCol} text-ivory-faint`}>#</span>
         <span className={`${styles.headerCell} ${styles.titleCol} text-ivory-faint`}>제목</span>
         <span className={`${styles.headerCell} ${styles.statusCol} text-ivory-faint`}>상태</span>
@@ -137,6 +161,27 @@ export function TestCaseTable({
               <span className={`${styles.handleCol} ${styles.dragHandle} text-ivory-faint`}>
                 <DragHandleIcon />
               </span>
+              {showSelect && (
+                <span
+                  className={styles.selectCol}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <input
+                    type="checkbox"
+                    className={styles.checkbox}
+                    aria-label={`${testCase.name} 선택`}
+                    title={
+                      testCase.steps.some((step) => step.automation)
+                        ? undefined
+                        : '자동화 스텝이 없는 케이스는 실행할 수 없습니다'
+                    }
+                    disabled={!testCase.steps.some((step) => step.automation)}
+                    checked={selectedIds?.has(testCase.id) ?? false}
+                    onChange={() => onToggleSelect?.(testCase)}
+                  />
+                </span>
+              )}
               <span className={`${styles.cell} ${styles.orderCol} text-ivory-faint`}>{index + 1}</span>
               <span className={`${styles.cell} ${styles.titleCol} ${styles.title} text-ivory`}>{testCase.name}</span>
               <span className={`${styles.cell} ${styles.statusCol}`}>
@@ -158,6 +203,9 @@ export function TestCaseTable({
                 <IconMenuButton
                   ariaLabel="테스트 케이스 설정"
                   items={[
+                    ...(onRun && testCase.steps.some((step) => step.automation)
+                      ? [{ label: '실행', onClick: () => onRun(testCase) }]
+                      : []),
                     { label: '수정', onClick: () => onEdit(testCase) },
                     { label: '삭제', onClick: () => onDelete(testCase), danger: true }
                   ]}

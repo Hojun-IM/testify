@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
-import type { TestCasePolicy, TestCaseStatus, TestCaseStep } from '../../../../shared/types'
+import { useEffect, useRef, useState } from 'react'
+import type { TestCasePolicy, TestCaseStatus, TestCaseStep, TestType } from '../../../../shared/types'
 import { SlidePanel } from '../ui/SlidePanel'
 import { Button } from '../ui/Button'
 import { TextField } from '../ui/TextField'
 import { type DropdownOption } from '../ui/Dropdown'
-import { CodeIcon, PlusIcon, CloseIcon } from '../ui/icons'
+import { CodeIcon, PlusIcon, CloseIcon, TargetIcon } from '../ui/icons'
+import { CaseRecorderModal } from './CaseRecorderModal'
 import styles from './TestCaseFormPanel.module.css'
 
 const STATUS_OPTIONS: DropdownOption[] = [
@@ -37,12 +38,18 @@ export function TestCaseFormPanel({
   onClose,
   onSubmit,
   mode = 'create',
+  testType,
+  sidebarCollapsed,
   initialValues
 }: {
   open: boolean
   onClose: () => void
   onSubmit: (values: TestCaseFormValues) => Promise<void>
   mode?: 'create' | 'edit'
+  // 소속 테스트의 종류 — e2e일 때만 브라우저 기록 기능을 노출한다
+  testType?: TestType
+  // 브라우저 기록 오버레이가 사이드바를 제외한 영역에 맞춰 뜨도록 전달
+  sidebarCollapsed?: boolean
   initialValues?: TestCaseFormValues
 }): JSX.Element {
   const [name, setName] = useState('')
@@ -52,6 +59,7 @@ export function TestCaseFormPanel({
   const [tagsText, setTagsText] = useState('')
   const [policy, setPolicy] = useState<TestCasePolicy>(DEFAULT_POLICY)
   const [submitting, setSubmitting] = useState(false)
+  const [recorderOpen, setRecorderOpen] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -62,6 +70,8 @@ export function TestCaseFormPanel({
       setTagsText((initialValues?.tags ?? []).join(', '))
       setPolicy(initialValues?.policy ?? DEFAULT_POLICY)
     }
+    // 패널이 닫히면 기록 오버레이도 함께 닫는다
+    if (!open) setRecorderOpen(false)
     // 패널이 열릴 때만 초기값으로 리셋한다 (열려 있는 동안 initialValues 재생성으로 인한 입력값 덮어쓰기 방지)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
@@ -78,12 +88,28 @@ export function TestCaseFormPanel({
     setSteps((prev) => prev.filter((_, i) => i !== index))
   }
 
+  // 브라우저 기록 오버레이에서 스텝이 기록될 때마다 폼의 시나리오 끝에 하나씩 추가한다.
+  // 폼이 스텝 목록의 단일 소스이므로, 사용자가 중간에 지운 스텝이 되살아나지 않는다.
+  // 재생 시작 URL은 비어 있을 때 첫 기록 페이지로 채운다
+  function appendRecordedStep(step: TestCaseStep, pageUrl?: string): void {
+    setSteps((prev) => [...prev, step])
+    if (pageUrl) {
+      setPolicy((prev) => ({ ...prev, automationStartUrl: prev.automationStartUrl || pageUrl }))
+    }
+  }
+
   async function handleSubmit(): Promise<void> {
     const trimmed = name.trim()
     if (!trimmed) return
 
     const cleanSteps = steps
-      .map((step) => ({ action: step.action.trim(), expected: step.expected.trim(), outcome: step.outcome.trim() }))
+      .map((step) => ({
+        action: step.action.trim(),
+        expected: step.expected.trim(),
+        outcome: step.outcome.trim(),
+        // 자동화 스텝은 텍스트를 수정하더라도 실행 바인딩(selector 등)이 유지되어야 한다
+        ...(step.automation ? { automation: step.automation } : {})
+      }))
       .filter((step) => step.action || step.expected || step.outcome)
     const cleanTags = tagsText
       .split(',')
@@ -105,10 +131,18 @@ export function TestCaseFormPanel({
 
   const isEdit = mode === 'edit'
 
+  // 기록 오버레이가 열려 있을 때 패널의 Escape/바깥 클릭은 기록만 닫는다.
+  // 요소 액션 메뉴까지 열려 있으면 메뉴만 닫히도록 아무것도 하지 않는다
+  function handlePanelClose(): void {
+    if (document.querySelector('[data-element-action-menu]')) return
+    if (recorderOpen) setRecorderOpen(false)
+    else onClose()
+  }
+
   return (
     <SlidePanel
       open={open}
-      onClose={onClose}
+      onClose={handlePanelClose}
       icon={<CodeIcon />}
       title={isEdit ? '테스트 케이스 수정' : '새 테스트 케이스'}
       width={TEST_CASE_PANEL_WIDTH}
@@ -154,7 +188,7 @@ export function TestCaseFormPanel({
         </div>
       </div>
 
-      <div className={`${styles.sectionTitle} text-clay-300`}>정책관리</div>
+      <div className={`${styles.sectionTitle} text-clay-300`}>시나리오</div>
       <div className={`${styles.stepHeaderRow} text-ivory-faint`}>
         <span className={styles.stepHeaderCell}>Action</span>
         <span className={styles.stepHeaderCell}>Expected</span>
@@ -163,6 +197,14 @@ export function TestCaseFormPanel({
       </div>
       {steps.map((step, index) => (
         <div key={index} className={styles.stepRow}>
+          {step.automation && (
+            <span
+              className={styles.autoBadge}
+              title={`자동화 스텝 — ${step.automation.actionType}${step.automation.selector ? ` (${step.automation.selector})` : ''}`}
+            >
+              ●
+            </span>
+          )}
           <input
             type="text"
             className={`${styles.stepInput} bg-raised border-line text-ivory`}
@@ -194,9 +236,20 @@ export function TestCaseFormPanel({
           </button>
         </div>
       ))}
-      <button type="button" className={`${styles.addStepBtn} border-line text-ivory-dim`} onClick={addStep}>
-        <PlusIcon size={13} /> 항목 추가
-      </button>
+      <div className={styles.stepActions}>
+        <button type="button" className={`${styles.addStepBtn} border-line text-ivory-dim`} onClick={addStep}>
+          <PlusIcon size={13} /> 항목 추가
+        </button>
+        {testType === 'e2e' && (
+          <button
+            type="button"
+            className={`${styles.addStepBtn} ${styles.recordBtn} border-line`}
+            onClick={() => setRecorderOpen(true)}
+          >
+            <TargetIcon size={13} /> 브라우저로 기록
+          </button>
+        )}
+      </div>
 
       <label className={styles.field} style={{ marginTop: 16 }}>
         <span className={`${styles.label} text-ivory-dim`}>태그</span>
@@ -208,6 +261,13 @@ export function TestCaseFormPanel({
           placeholder="쉼표(,)로 구분 (예: auth, critical-path)"
         />
       </label>
+
+      <CaseRecorderModal
+        open={recorderOpen}
+        onClose={() => setRecorderOpen(false)}
+        onAddStep={appendRecordedStep}
+        sidebarCollapsed={sidebarCollapsed}
+      />
     </SlidePanel>
   )
 }

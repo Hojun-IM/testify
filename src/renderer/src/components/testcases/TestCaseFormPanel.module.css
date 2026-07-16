@@ -93,11 +93,34 @@
 }
 
 .stepRow {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 26px;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+}
+
+/* 브라우저 기록으로 만들어진(자동화 바인딩이 있는) 스텝 표시 */
+.autoBadge {
+  position: absolute;
+  left: -13px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 8px;
+  line-height: 1;
+  color: var(--color-clay-400);
+  cursor: help;
+}
+
+.stepActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recordBtn {
+  color: var(--color-clay-300);
 }
 
 .stepInput {
