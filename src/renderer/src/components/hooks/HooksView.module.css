@@ -1,0 +1,33 @@
+.view {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  -webkit-app-region: no-drag;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  margin-top: 6px;
+  padding: 2px 10px;
+  font-size: 12px;
+}
+
+.header.collapsed {
+  padding-left: 107px;
+}
+
+.body {
+  -webkit-app-region: no-drag;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.content {
+  padding: 24px 0 30px;
+}

@@ -6,6 +6,7 @@ import { Button } from '../ui/Button'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { TestCaseTable } from './TestCaseTable'
 import { TestCaseFormPanel, TEST_CASE_PANEL_WIDTH, type TestCaseFormValues } from './TestCaseFormPanel'
+import { TestHooksModal } from '../hooks/TestHooksModal'
 import styles from './TestCaseListView.module.css'
 
 export function TestCaseListView({
@@ -31,6 +32,20 @@ export function TestCaseListView({
   const [panelMode, setPanelMode] = useState<'create' | 'edit'>('create')
   const [editingCase, setEditingCase] = useState<TestCase | null>(null)
   const [deletingCase, setDeletingCase] = useState<TestCase | null>(null)
+
+  // 이 테스트에 불러와 연결한 전역 훅
+  const [hooksModalOpen, setHooksModalOpen] = useState(false)
+  const [linkedHookCount, setLinkedHookCount] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    window.api.hooks.listForTest(test.id).then((hooks) => {
+      if (!cancelled) setLinkedHookCount(hooks.length)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [test.id])
 
   useEffect(() => {
     casesRef.current = cases
@@ -162,6 +177,9 @@ export function TestCaseListView({
               <SearchInput value={search} onChange={setSearch} placeholder="테스트 케이스 검색..." />
             </div>
             <div className={styles.right}>
+              <Button variant="ghost" onClick={() => setHooksModalOpen(true)}>
+                훅{linkedHookCount > 0 ? ` (${linkedHookCount})` : ''}
+              </Button>
               <Button variant="ghost">Export</Button>
               <Button variant="ghost">Import</Button>
               <Button onClick={openCreatePanel}>새 케이스</Button>
@@ -213,6 +231,13 @@ export function TestCaseListView({
             : undefined
         }
       />
+      <TestHooksModal
+        open={hooksModalOpen}
+        testId={test.id}
+        onClose={() => setHooksModalOpen(false)}
+        onSaved={setLinkedHookCount}
+        sidebarCollapsed={sidebarCollapsed}
+      />
       <ConfirmDialog
         open={!!deletingCase}
         onClose={() => setDeletingCase(null)}
@@ -220,6 +245,7 @@ export function TestCaseListView({
         title="테스트 케이스 삭제"
         description={`"${deletingCase?.name}" 테스트 케이스를 삭제하면 관련된 모든 실행 기록이 함께 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
         confirmLabel="영구 삭제"
+        sidebarCollapsed={sidebarCollapsed}
       />
     </div>
   )
