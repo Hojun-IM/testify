@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type {
+  ApiRequestSpec,
   ProjectCreateInput,
   ProjectListParams,
   ProjectStatus,
@@ -35,6 +36,9 @@ const api = {
     update: (input: TestCaseUpdateInput) => ipcRenderer.invoke('testCases:update', input),
     remove: (id: string) => ipcRenderer.invoke('testCases:remove', id),
     reorder: (input: TestCaseReorderInput) => ipcRenderer.invoke('testCases:reorder', input)
+  },
+  http: {
+    request: (spec: ApiRequestSpec) => ipcRenderer.invoke('http:request', spec)
   }
 }
 

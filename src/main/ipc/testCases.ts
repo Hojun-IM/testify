@@ -2,6 +2,8 @@ import { ipcMain } from 'electron'
 import { randomUUID } from 'crypto'
 import { getDb, currentUser } from '../db'
 import type {
+  ApiKeyValue,
+  ApiRequestSpec,
   TestCase,
   TestCaseCreateInput,
   TestCaseListParams,
@@ -29,14 +31,69 @@ const DEFAULT_POLICY: TestCasePolicy = {
 // 앱을 거치지 않고 직접 삽입되었거나 이전 스키마로 저장된 행은 policy/steps가 불완전할 수 있어
 // 항상 완전한 형태로 정규화해서 내려준다 (그렇지 않으면 프론트에서 예: policy.targetEnvs가
 // undefined가 되어 렌더링이 깨진다)
+function normalizeKeyValueList(raw: unknown): ApiKeyValue[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .filter((item): item is Partial<ApiKeyValue> => !!item && typeof item === 'object')
+    .map((item) => ({
+      key: typeof item.key === 'string' ? item.key : '',
+      value: typeof item.value === 'string' ? item.value : '',
+      description: typeof item.description === 'string' ? item.description : '',
+      enabled: item.enabled !== false
+    }))
+}
+
+function normalizeApiRequest(raw: unknown): ApiRequestSpec | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const partial = raw as Partial<ApiRequestSpec>
+  if (typeof partial.method !== 'string' || typeof partial.url !== 'string') return undefined
+
+  const auth = partial.auth
+  const normalizedAuth: ApiRequestSpec['auth'] =
+    auth && typeof auth === 'object' && auth.type === 'bearer'
+      ? { type: 'bearer', token: typeof (auth as { token?: unknown }).token === 'string' ? (auth as { token: string }).token : '' }
+      : auth && typeof auth === 'object' && auth.type === 'basic'
+        ? {
+            type: 'basic',
+            username:
+              typeof (auth as { username?: unknown }).username === 'string' ? (auth as { username: string }).username : '',
+            password:
+              typeof (auth as { password?: unknown }).password === 'string' ? (auth as { password: string }).password : ''
+          }
+        : { type: 'none' }
+
+  const body = partial.body
+  const normalizedBody: ApiRequestSpec['body'] = {
+    mode:
+      body && typeof body === 'object' && ['none', 'json', 'text', 'form'].includes((body as { mode?: unknown }).mode as string)
+        ? ((body as { mode: ApiRequestSpec['body']['mode'] }).mode)
+        : 'none',
+    content: body && typeof body === 'object' && typeof (body as { content?: unknown }).content === 'string'
+      ? (body as { content: string }).content
+      : ''
+  }
+
+  return {
+    method: partial.method,
+    url: partial.url,
+    params: normalizeKeyValueList(partial.params),
+    headers: normalizeKeyValueList(partial.headers),
+    auth: normalizedAuth,
+    body: normalizedBody,
+    ...(typeof partial.expectedStatus === 'number' ? { expectedStatus: partial.expectedStatus } : {})
+  }
+}
+
 function normalizeAutomation(raw: unknown): TestCaseStepAutomation | undefined {
   if (!raw || typeof raw !== 'object') return undefined
   const partial = raw as Partial<TestCaseStepAutomation>
   if (typeof partial.actionType !== 'string' || typeof partial.selector !== 'string') return undefined
+  const request = normalizeApiRequest(partial.request)
   return {
     actionType: partial.actionType,
     selector: partial.selector,
-    ...(typeof partial.value === 'string' ? { value: partial.value } : {})
+    ...(typeof partial.value === 'string' ? { value: partial.value } : {}),
+    ...(request ? { request } : {})
   }
 }
 

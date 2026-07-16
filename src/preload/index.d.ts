@@ -1,4 +1,6 @@
 import type {
+  ApiRequestSpec,
+  HttpRequestResult,
   Project,
   ProjectCreateInput,
   ProjectEnvironment,
@@ -42,6 +44,9 @@ declare global {
         update: (input: TestCaseUpdateInput) => Promise<TestCase>
         remove: (id: string) => Promise<void>
         reorder: (input: TestCaseReorderInput) => Promise<void>
+      }
+      http: {
+        request: (spec: ApiRequestSpec) => Promise<HttpRequestResult>
       }
     }
   }
