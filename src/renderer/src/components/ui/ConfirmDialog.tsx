@@ -9,7 +9,8 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel = '삭제',
-  danger = true
+  danger = true,
+  sidebarCollapsed
 }: {
   open: boolean
   onClose: () => void
@@ -18,6 +19,7 @@ export function ConfirmDialog({
   description: string
   confirmLabel?: string
   danger?: boolean
+  sidebarCollapsed?: boolean
 }): JSX.Element {
   const [submitting, setSubmitting] = useState(false)
 
@@ -33,6 +35,7 @@ export function ConfirmDialog({
       onClose={onClose}
       size="sm"
       title={title}
+      sidebarCollapsed={sidebarCollapsed}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>

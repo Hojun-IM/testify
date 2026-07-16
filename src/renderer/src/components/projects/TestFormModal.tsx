@@ -22,13 +22,15 @@ export function TestFormModal({
   onClose,
   onSubmit,
   mode = 'create',
-  initialValues
+  initialValues,
+  sidebarCollapsed
 }: {
   open: boolean
   onClose: () => void
   onSubmit: (values: TestFormValues) => Promise<void>
   mode?: 'create' | 'edit'
   initialValues?: TestFormValues
+  sidebarCollapsed?: boolean
 }): JSX.Element {
   const [name, setName] = useState('')
   const [type, setType] = useState('api')
@@ -61,6 +63,7 @@ export function TestFormModal({
       onClose={onClose}
       icon={<CodeIcon />}
       title={isEdit ? '테스트 수정' : '새 테스트'}
+      sidebarCollapsed={sidebarCollapsed}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>

@@ -1,7 +1,8 @@
 .overlay {
   position: fixed;
-  top: 12px;
-  bottom: 12px;
+  /* 사이드바와 동일한 여백(App.module.css .layout padding)으로 위/아래에서 살짝 띄운다 */
+  top: 8px;
+  bottom: 8px;
   /* 남은 콘텐츠 영역이 너무 좁으면(작은 창) right 인셋을 포기하고 최소 폭을 확보한다 */
   min-width: 480px;
   /* left/right는 사이드바/케이스 패널 폭에 맞춰 인라인 스타일로 지정 */
@@ -10,7 +11,8 @@
   display: flex;
   flex-direction: column;
   border: 1px solid;
-  border-radius: 12px;
+  /* 사이드바/사이드 패널과 동일한 radius로 통일감을 준다 */
+  border-radius: 6px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
   overflow: hidden;
 }

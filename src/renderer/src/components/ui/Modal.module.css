@@ -16,7 +16,8 @@
   max-height: calc(100vh - 64px);
   border-width: 1px;
   border-style: solid;
-  border-radius: 12px;
+  /* 사이드바/사이드 패널과 동일한 radius로 앱 전체 통일감을 준다 */
+  border-radius: 6px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 

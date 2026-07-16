@@ -3,11 +3,12 @@
   box-sizing: border-box;
   width: 780px;
   max-width: calc(100% - 32px);
-  margin: 16px auto 0;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 30px 0;
+  /* 상단 여백은 위의 테스트/훅 탭(sectionTabs)이 담당한다 */
+  padding: 6px 0 30px;
 }
 
 .controlsRow {

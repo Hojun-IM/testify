@@ -12,12 +12,17 @@ export function Dropdown({
   label,
   options,
   value,
-  onChange
+  onChange,
+  minWidth
 }: {
   label?: string
   options: DropdownOption[]
   value: string
   onChange: (value: string) => void
+  // 드롭다운 메뉴는 트리거 버튼의 실측 너비를 그대로 물려받는다(Dropdown.module.css .menu).
+  // 선택된 값이 짧아 트리거가 좁아지면 긴 옵션 텍스트가 메뉴 안에서 줄바꿈되므로,
+  // 옵션 중 가장 긴 텍스트가 한 줄로 들어갈 만큼 트리거의 최소 너비를 지정할 때 쓴다
+  minWidth?: number
 }): JSX.Element {
   const [open, setOpen] = useState(false)
   const [menuRect, setMenuRect] = useState<{ top: number; left: number; width: number } | null>(null)
@@ -61,6 +66,7 @@ export function Dropdown({
         ref={triggerRef}
         type="button"
         className={`${styles.trigger} bg-raised hover:bg-overlay text-ivory`}
+        style={minWidth ? { minWidth } : undefined}
         onClick={() => setOpen((prev) => !prev)}
       >
         {label && <span className="text-ivory-faint">{label}</span>}

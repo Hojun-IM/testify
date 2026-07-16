@@ -68,12 +68,14 @@ function buildColumns(
 export function ProjectTestsSection({
   projectId,
   onSelectTest,
-  onRunTest
+  onRunTest,
+  sidebarCollapsed
 }: {
   projectId: string
   onSelectTest: (test: Test) => void
   // 테스트에 속한 자동화 케이스 전체를 대시보드에서 실행
   onRunTest?: (test: Test) => void
+  sidebarCollapsed?: boolean
 }): JSX.Element {
   const [search, setSearch] = useState('')
   const [type, setType] = useState('all')
@@ -185,6 +187,7 @@ export function ProjectTestsSection({
         initialValues={
           formMode === 'edit' && editingTest ? { name: editingTest.name, type: editingTest.type } : undefined
         }
+        sidebarCollapsed={sidebarCollapsed}
       />
       <ConfirmDialog
         open={!!deletingTest}
@@ -193,6 +196,7 @@ export function ProjectTestsSection({
         title="테스트 삭제"
         description={`"${deletingTest?.name}" 테스트를 삭제하면 여기에 속한 모든 테스트 케이스와 실행 기록이 함께 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
         confirmLabel="영구 삭제"
+        sidebarCollapsed={sidebarCollapsed}
       />
     </div>
   )

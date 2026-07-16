@@ -8,6 +8,10 @@
   border-radius: 6px;
   overflow: hidden;
   -webkit-app-region: drag;
+  /* 사이드 패널/모달의 배경(backdrop)이 전체 화면을 덮어도 사이드바(특히 접기 버튼)는
+     항상 클릭 가능해야 한다 — backdrop(z-index 100)과 브라우저 기록 오버레이(z-index 110)보다 위에 둔다 */
+  position: relative;
+  z-index: 300;
 }
 
 .titlebar {

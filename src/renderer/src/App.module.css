@@ -19,5 +19,6 @@
   position: absolute;
   top: 7px;
   left: 71px;
-  z-index: 1;
+  /* 모달/사이드 패널이 열려 있어도(backdrop z-index 100) 항상 클릭 가능하도록 Sidebar와 같은 등급 */
+  z-index: 300;
 }
