@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { SlidePanel } from '../ui/SlidePanel'
 import { ChevronLeftIcon } from '../ui/icons'
-import type { LogLevel, RunCase, RunLogEntry } from './useSimulatedRun'
+import type { LogLevel, RunCase, RunLogEntry } from './runTypes'
 import styles from './CaseResultsPanel.module.css'
 
 export type ResultFilter = 'all' | 'waiting' | 'passed' | 'failed'
@@ -70,10 +70,6 @@ function CaseDetail({ runCase, logs }: { runCase: RunCase; logs: RunLogEntry[] }
           >
             {STATUS_LABELS[runCase.status]}
           </span>
-        </div>
-        <div className={`${styles.summaryItem} bg-raised border-line`}>
-          <span className={`${styles.summaryLabel} text-ivory-faint`}>타입</span>
-          <span className="text-ivory">{runCase.type.toUpperCase()}</span>
         </div>
         <div className={`${styles.summaryItem} bg-raised border-line`}>
           <span className={`${styles.summaryLabel} text-ivory-faint`}>소요 시간</span>
@@ -176,7 +172,7 @@ export function CaseResultsPanel({
                   <span className={styles.info}>
                     <span className={`${styles.name} text-ivory`}>{runCase.name}</span>
                     <span className={`${styles.meta} text-ivory-faint`}>
-                      {runCase.type.toUpperCase()}
+                      {STATUS_LABELS[runCase.status]}
                       {runCase.durationMs !== null && ` · ${formatDuration(runCase.durationMs)}`}
                     </span>
                   </span>

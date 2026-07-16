@@ -202,3 +202,24 @@ export function CollapseIcon({ size = 16 }: IconProps): JSX.Element {
     </svg>
   )
 }
+
+export function PlayIcon({ size = 16 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <polygon points="6.5,4 15.5,10 6.5,16" />
+    </svg>
+  )
+}
+
+export function TargetIcon({ size = 16 }: IconProps): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" {...base}>
+      <circle cx="10" cy="10" r="5.5" />
+      <circle cx="10" cy="10" r="1" fill="currentColor" stroke="none" />
+      <line x1="10" y1="1.5" x2="10" y2="4.5" />
+      <line x1="10" y1="15.5" x2="10" y2="18.5" />
+      <line x1="1.5" y1="10" x2="4.5" y2="10" />
+      <line x1="15.5" y1="10" x2="18.5" y2="10" />
+    </svg>
+  )
+}

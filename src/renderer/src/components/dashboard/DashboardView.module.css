@@ -53,3 +53,9 @@
   margin: 0;
   font-size: 12px;
 }
+
+.controlButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

@@ -1,5 +1,5 @@
 import type { ResultFilter } from './CaseResultsPanel'
-import type { RunCase } from './useSimulatedRun'
+import type { RunCase } from './runTypes'
 import styles from './RunStatsRow.module.css'
 
 function StatCard({
