@@ -39,7 +39,7 @@ export function ProjectDetailView({
       <div className={styles.body}>
         <div className={styles.row}>
           <ProjectInfoPanel project={project} environmentsVersion={environmentsVersion} />
-          <ProjectStatsPanel />
+          <ProjectStatsPanel projectId={project.id} />
         </div>
         <div className={styles.sectionTabs}>
           <Tabs

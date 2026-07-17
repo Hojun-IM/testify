@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { TestCase } from '../../../../shared/types'
+import type { Hook, HookTiming, TestCase, TestRunStatus } from '../../../../shared/types'
 import { Button } from '../ui/Button'
 import { PlayIcon } from '../ui/icons'
 import { RunStatsRow } from './RunStatsRow'
@@ -9,6 +9,7 @@ import {
   type NetworkEventPayload,
   type PlaybackCase,
   type PlaybackEvent,
+  type PlaybackHookGroup,
   type PlaybackRequest
 } from './LiveBrowserPane'
 import { CaseResultsPanel, type ResultFilter } from './CaseResultsPanel'
@@ -18,6 +19,14 @@ import { formatLogTime, type LogLevel, type RunCase, type RunLogEntry } from './
 import styles from './DashboardView.module.css'
 
 const MAX_DEVTOOL_ENTRIES = 400
+
+const HOOK_TIMING_LABELS: Record<HookTiming, string> = {
+  beforeAll: '전체 시작 전',
+  beforeEach: '케이스 시작 전',
+  afterEach: '케이스 종료 후',
+  afterAll: '전체 종료 후',
+  onFailure: '실패 시'
+}
 
 // 대시보드는 테스트 케이스 실행(재생)을 지켜보고 결과를 확인하는 화면이다.
 // 케이스 기록/등록은 테스트 케이스 목록의 생성 패널(브라우저 기록)에서 한다
@@ -86,12 +95,61 @@ export function DashboardView({
 
   // 마지막으로 실행한 케이스들 — "재실행" 버튼이 이 목록을 다시 돌린다
   const lastPlayedCasesRef = useRef<TestCase[]>([])
+  // 현재 재생 세션의 실행 기록(test_runs) id. 케이스 결과/완료 시점에 실제 DB에 남기는 데 쓴다.
+  // 세션 시작 시 IPC 호출이 실패하면 null로 남아 이후 기록을 조용히 건너뛴다
+  const testRunIdRef = useRef<string | null>(null)
 
-  // 자동화 스텝을 케이스별로 시나리오 패널에 불러오고 실제 브라우저에서 재생을 시작한다
-  function startPlayback(testCases: TestCase[]): boolean {
+  // 자동화 스텝을 케이스별로 시나리오 패널에 불러오고 실제 브라우저에서 재생을 시작한다.
+  // 재생 시작 전에 실행 세션(test_run) 기록을 먼저 남겨야 케이스 결과를 거기 연결할 수 있어 비동기로 처리한다
+  async function startPlayback(testCases: TestCase[]): Promise<boolean> {
     const runnable = testCases.filter((testCase) => testCase.steps.some((step) => step.automation))
     if (runnable.length === 0) return false
     lastPlayedCasesRef.current = runnable
+
+    // 대시보드로 넘어오는 케이스는 항상 테스트 하나에 속해 있으므로(단건/일괄 실행 모두
+    // 같은 테스트 화면에서 시작됨) 첫 케이스의 test_id로 실행 세션을 연다
+    testRunIdRef.current = null
+    try {
+      const run = await window.api.testRuns.start({ test_id: runnable[0].test_id })
+      testRunIdRef.current = run.id
+    } catch {
+      // 실행 기록 저장에 실패해도 재생 자체는 계속한다 — 화면상 실행/결과 확인에는 영향 없음
+    }
+
+    // 이 테스트에 연결된 활성 훅을 타이밍별로 묶어 재생 요청에 함께 실어 보낸다.
+    // 훅 조회가 실패해도 케이스 재생 자체는 계속한다 — hookGroups가 undefined면 그냥 훅 없이 실행된다
+    let hookGroups: PlaybackHookGroup | undefined
+    try {
+      const hooks = await window.api.hooks.listForTest(runnable[0].test_id)
+      const runnableHooks = hooks.filter((hook) => hook.enabled && hook.steps.some((step) => step.automation))
+      const toPlaybackCase = (hook: Hook): PlaybackCase => ({
+        caseId: hook.id,
+        name: hook.name,
+        startUrl: hook.start_url ?? undefined,
+        steps: hook.steps
+          .filter((step) => step.automation)
+          .map((step) => {
+            stepIdRef.current += 1
+            return {
+              stepId: stepIdRef.current,
+              actionType: step.automation!.actionType,
+              selector: step.automation!.selector,
+              value: step.automation!.value,
+              label: `${step.action}${step.expected ? ` — ${step.expected}` : ''}`,
+              request: step.automation!.request
+            }
+          })
+      })
+      hookGroups = {
+        beforeAll: runnableHooks.filter((hook) => hook.timing === 'beforeAll').map(toPlaybackCase),
+        beforeEach: runnableHooks.filter((hook) => hook.timing === 'beforeEach').map(toPlaybackCase),
+        afterEach: runnableHooks.filter((hook) => hook.timing === 'afterEach').map(toPlaybackCase),
+        afterAll: runnableHooks.filter((hook) => hook.timing === 'afterAll').map(toPlaybackCase),
+        onFailure: runnableHooks.filter((hook) => hook.timing === 'onFailure').map(toPlaybackCase)
+      }
+    } catch {
+      // 훅 조회에 실패해도 케이스 재생 자체는 계속한다
+    }
 
     const allSteps: ScenarioStep[] = []
     const playbackCases: PlaybackCase[] = runnable.map((testCase) => {
@@ -143,21 +201,29 @@ export function DashboardView({
       }))
     )
     setPlayLogs([])
-    setPlaybackRequest({ token: playTokenRef.current, cases: playbackCases })
+    setPlaybackRequest({ token: playTokenRef.current, cases: playbackCases, hooks: hookGroups })
     return true
   }
+
+  // 이 정확한 autoPlayCases 배치를 이미 재생 시작했는지 — React 18 StrictMode(dev)가
+  // 마운트 직후 effect를 두 번 실행하는데, startPlayback이 비동기라 가드 없이는
+  // testRuns:start가 경쟁 상태로 두 번 불려 test_run 행이 중복 생성된다. 동기적으로 먼저
+  // 체크/기록해 async 작업이 시작되기 전에 두 번째 호출을 막는다
+  const autoPlayHandledRef = useRef<TestCase[] | null>(null)
 
   // TestCaseTable/테스트 목록의 "실행"(단건/일괄)에서 App이 이 값을 채워 넘겨준다
   useEffect(() => {
     if (!autoPlayCases || autoPlayCases.length === 0) return
-    startPlayback(autoPlayCases)
+    if (autoPlayHandledRef.current === autoPlayCases) return
+    autoPlayHandledRef.current = autoPlayCases
+    void startPlayback(autoPlayCases)
     onAutoPlayConsumed?.()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPlayCases])
 
   function handleRerun(): void {
     if (playing || lastPlayedCasesRef.current.length === 0) return
-    startPlayback(lastPlayedCasesRef.current)
+    void startPlayback(lastPlayedCasesRef.current)
   }
 
   // 재생 세션 시작 로그는 playCases 초기화와 같은 렌더 사이클을 피해서 남긴다
@@ -183,6 +249,22 @@ export function DashboardView({
       )
       return
     }
+    if (event.kind === 'hook-start') {
+      appendPlayLog('info', `⚙ [훅·${HOOK_TIMING_LABELS[event.timing]}] ${event.name} 실행 시작`, event.caseId)
+      return
+    }
+    if (event.kind === 'hook-end') {
+      if (event.passed) {
+        appendPlayLog('success', `⚙ ✓ [훅·${HOOK_TIMING_LABELS[event.timing]}] ${event.name} 완료`, event.caseId)
+      } else {
+        appendPlayLog(
+          'error',
+          `⚙ ✕ [훅·${HOOK_TIMING_LABELS[event.timing]}] ${event.name} 실패 — ${event.failMessage ?? ''}`,
+          event.caseId
+        )
+      }
+      return
+    }
     // case-end
     playResultsRef.current.set(event.caseId, event.passed)
     const name = playCasesRef.current.find((item) => item.id === event.caseId)?.name ?? event.caseId
@@ -193,6 +275,17 @@ export function DashboardView({
     })
     if (event.passed) appendPlayLog('success', `✓ ${name} 통과`, event.caseId)
     else appendPlayLog('error', `✕ ${name} 실패 — ${event.failMessage ?? ''}`, event.caseId)
+
+    // 실제 실행 이력으로 남긴다 — 프로젝트 상세의 실행 횟수 히트맵과 "마지막 실행" 표시가 이 데이터를 쓴다
+    if (testRunIdRef.current) {
+      void window.api.testRuns.recordCase({
+        test_run_id: testRunIdRef.current,
+        test_case_id: event.caseId,
+        status: event.passed ? 'success' : 'failure',
+        message: event.failMessage,
+        duration_ms: event.durationMs
+      })
+    }
   }
 
   function handlePlaybackComplete(token: number): void {
@@ -204,11 +297,37 @@ export function DashboardView({
       'info',
       `실행 완료 — 전체 ${playCasesRef.current.length}건 · 성공 ${passed}건 · 실패 ${results.length - passed}건`
     )
+
+    if (testRunIdRef.current) {
+      const status: TestRunStatus =
+        results.length === 0 ? 'error' : passed === results.length ? 'success' : passed === 0 ? 'failure' : 'partial'
+      void window.api.testRuns.finish({ id: testRunIdRef.current, status })
+      testRunIdRef.current = null
+    }
   }
 
   function stopPlayback(): void {
     playTokenRef.current += 1
     setPlaybackRequest(null)
+    if (testRunIdRef.current) {
+      const runId = testRunIdRef.current
+      // 중단 시점에 실행 중이었거나 아직 시작도 못한 케이스는 그냥 버려지면 통계에서
+      // 영영 빠지게 된다 — 실제로 통과/실패하지 못했다는 사실 자체를 이력으로 남긴다
+      for (const item of playCasesRef.current) {
+        if (item.status === 'running' || item.status === 'pending') {
+          void window.api.testRuns.recordCase({
+            test_run_id: runId,
+            test_case_id: item.id,
+            status: 'skipped',
+            message: '사용자에 의해 중지됨',
+            duration_ms: null
+          })
+        }
+      }
+      // 사용자가 중간에 멈춘 세션 — 끝까지 실행되지 못했음을 기록해둔다
+      void window.api.testRuns.finish({ id: runId, status: 'error' })
+      testRunIdRef.current = null
+    }
     setPlayCases((prev) =>
       prev.map((item) => (item.status === 'running' ? { ...item, status: 'pending' } : item))
     )

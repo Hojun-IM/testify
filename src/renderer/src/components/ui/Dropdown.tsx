@@ -70,9 +70,11 @@ export function Dropdown({
         onClick={() => setOpen((prev) => !prev)}
       >
         {label && <span className="text-ivory-faint">{label}</span>}
-        <span>{selected?.label ?? value}</span>
-        <span className="text-ivory-faint chevron" style={{ transform: open ? 'rotate(180deg)' : undefined }}>
-          <ChevronDownIcon size={12} />
+        <span className={styles.valueGroup}>
+          <span>{selected?.label ?? value}</span>
+          <span className="text-ivory-faint chevron" style={{ transform: open ? 'rotate(180deg)' : undefined }}>
+            <ChevronDownIcon size={12} />
+          </span>
         </span>
       </button>
       {open &&

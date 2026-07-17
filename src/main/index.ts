@@ -6,6 +6,7 @@ import { registerTestHandlers } from './ipc/tests'
 import { registerTestCaseHandlers } from './ipc/testCases'
 import { registerHttpHandlers } from './ipc/http'
 import { registerHookHandlers } from './ipc/hooks'
+import { registerTestRunHandlers } from './ipc/testRuns'
 
 const isDev = !app.isPackaged
 
@@ -60,6 +61,7 @@ app.whenReady().then(() => {
   registerTestCaseHandlers()
   registerHttpHandlers()
   registerHookHandlers()
+  registerTestRunHandlers()
   createWindow()
 
   app.on('activate', function () {
