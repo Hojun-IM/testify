@@ -7,7 +7,7 @@ import {
   RefreshIcon,
   TargetIcon
 } from '../ui/icons'
-import type { ApiRequestSpec } from '../../../../shared/types'
+import type { ApiRequestSpec, HookTiming } from '../../../../shared/types'
 import {
   NETWORK_HOOK_SCRIPT,
   NETWORK_PREFIX,
@@ -139,9 +139,19 @@ export type PlaybackCase = {
   steps: PlaybackStep[]
 }
 
+// 타이밍별로 묶인, 이번 재생에 함께 실행할 훅들. 각 훅은 케이스와 동일한 구조(PlaybackCase)로 표현된다
+export type PlaybackHookGroup = {
+  beforeAll: PlaybackCase[]
+  beforeEach: PlaybackCase[]
+  afterEach: PlaybackCase[]
+  afterAll: PlaybackCase[]
+  onFailure: PlaybackCase[]
+}
+
 export type PlaybackRequest = {
   token: number
   cases: PlaybackCase[]
+  hooks?: PlaybackHookGroup
 }
 
 // 재생 진행 상황을 부모(DashboardView)로 알리는 이벤트.
@@ -150,6 +160,18 @@ export type PlaybackEvent =
   | { kind: 'case-start'; caseId: string }
   | { kind: 'step-result'; caseId: string; stepId: number; label: string; result: StepResult }
   | { kind: 'case-end'; caseId: string; passed: boolean; failMessage: string | null; durationMs: number }
+  // caseId는 beforeEach/afterEach/onFailure처럼 특정 케이스에 붙어 실행될 때만 채워진다
+  | { kind: 'hook-start'; hookId: string; name: string; timing: HookTiming; caseId: string | null }
+  | {
+      kind: 'hook-end'
+      hookId: string
+      name: string
+      timing: HookTiming
+      caseId: string | null
+      passed: boolean
+      failMessage: string | null
+      durationMs: number
+    }
 
 export function LiveBrowserPane({
   onConsoleMessage,
@@ -386,51 +408,94 @@ export function LiveBrowserPane({
       }
     }
 
+    // 시작 URL로 이동 후 스텝을 순서대로 실행한다. 케이스와 훅 재생 모두 이 로직을 공유한다.
+    // onStep이 주어지면(실제 케이스 재생) 스텝마다 step-result 이벤트를 내보낸다 — 훅은 시나리오
+    // 패널에 표시되는 케이스가 아니므로 훅 재생 시에는 onStep을 생략한다
+    async function runSteps(
+      startUrl: string | undefined,
+      steps: PlaybackStep[],
+      token: number,
+      onStep?: (step: PlaybackStep, result: StepResult) => void
+    ): Promise<string | null> {
+      let failMessage: string | null = null
+      try {
+        const target = startUrl ? normalizeUrl(startUrl) : null
+        if (target) {
+          navigateTo(target)
+          await waitForPageLoad(webview as WebviewTag, target, 8000)
+        }
+        await sleep(400)
+
+        for (const step of steps) {
+          if (playbackTokenRef.current !== token) return null
+          await sleep(500)
+          if (playbackTokenRef.current !== token) return null
+
+          const result = await runStep(step)
+          if (playbackTokenRef.current !== token) return null
+          onStep?.(step, result)
+
+          if (!result.ok) {
+            failMessage = `${step.label} — ${result.error ?? '실행 실패'}`
+            break
+          }
+          // 클릭 등으로 트리거된 페이지 이동이 안정되도록 다음 스텝 전 잠시 대기
+          await sleep(400)
+        }
+      } catch (error) {
+        // 예기치 못한 예외로 케이스/훅 하나가 죽어도 나머지는 계속 실행한다
+        failMessage = `실행 오류 — ${String((error as Error)?.message ?? error)}`
+      }
+      return failMessage
+    }
+
     async function run(): Promise<void> {
       const request = playbackRequest as PlaybackRequest
       const token = request.token
       const emit = (event: PlaybackEvent): void => onPlaybackEventRef.current?.(event)
+      const hookGroups = request.hooks
 
       // 대시보드 진입 직후에는 webview가 아직 초기화 전일 수 있다
       await waitForWebviewReady(webview as WebviewTag, 5000)
       if (playbackTokenRef.current !== token) return
 
+      // caseId가 주어지면 그 케이스 앞뒤(beforeEach/afterEach/onFailure)에 붙어 실행되는 훅,
+      // null이면 전체 재생 앞뒤(beforeAll/afterAll)에 한 번만 실행되는 훅이다
+      async function runHookGroup(hooks: PlaybackCase[] | undefined, timing: HookTiming, caseId: string | null): Promise<void> {
+        if (!hooks || hooks.length === 0) return
+        for (const hook of hooks) {
+          if (playbackTokenRef.current !== token) return
+          emit({ kind: 'hook-start', hookId: hook.caseId, name: hook.name, timing, caseId })
+          const startedAt = Date.now()
+          const failMessage = await runSteps(hook.startUrl, hook.steps, token)
+          if (playbackTokenRef.current !== token) return
+          emit({
+            kind: 'hook-end',
+            hookId: hook.caseId,
+            name: hook.name,
+            timing,
+            caseId,
+            passed: !failMessage,
+            failMessage,
+            durationMs: Date.now() - startedAt
+          })
+        }
+      }
+
+      await runHookGroup(hookGroups?.beforeAll, 'beforeAll', null)
+      if (playbackTokenRef.current !== token) return
+
       for (const playbackCase of request.cases) {
         if (playbackTokenRef.current !== token) return
+
+        await runHookGroup(hookGroups?.beforeEach, 'beforeEach', playbackCase.caseId)
+        if (playbackTokenRef.current !== token) return
+
         emit({ kind: 'case-start', caseId: playbackCase.caseId })
         const startedAt = Date.now()
-        let failMessage: string | null = null
-
-        try {
-          // 케이스별 시작 URL로 이동 (첫 스텝이 goto면 그 스텝이 대신 처리한다)
-          const target = playbackCase.startUrl ? normalizeUrl(playbackCase.startUrl) : null
-          if (target) {
-            navigateTo(target)
-            await waitForPageLoad(webview as WebviewTag, target, 8000)
-          }
-          await sleep(400)
-
-          for (const step of playbackCase.steps) {
-            if (playbackTokenRef.current !== token) return
-            await sleep(500)
-            if (playbackTokenRef.current !== token) return
-
-            const result = await runStep(step)
-            if (playbackTokenRef.current !== token) return
-            emit({ kind: 'step-result', caseId: playbackCase.caseId, stepId: step.stepId, label: step.label, result })
-
-            if (!result.ok) {
-              failMessage = `${step.label} — ${result.error ?? '실행 실패'}`
-              break
-            }
-            // 클릭 등으로 트리거된 페이지 이동이 안정되도록 다음 스텝 전 잠시 대기
-            await sleep(400)
-          }
-        } catch (error) {
-          // 예기치 못한 예외로 케이스 하나가 죽어도 나머지 케이스는 계속 실행한다
-          failMessage = `실행 오류 — ${String((error as Error)?.message ?? error)}`
-        }
-
+        const failMessage = await runSteps(playbackCase.startUrl, playbackCase.steps, token, (step, result) =>
+          emit({ kind: 'step-result', caseId: playbackCase.caseId, stepId: step.stepId, label: step.label, result })
+        )
         if (playbackTokenRef.current !== token) return
         emit({
           kind: 'case-end',
@@ -439,7 +504,14 @@ export function LiveBrowserPane({
           failMessage,
           durationMs: Date.now() - startedAt
         })
+
+        if (failMessage) await runHookGroup(hookGroups?.onFailure, 'onFailure', playbackCase.caseId)
+        if (playbackTokenRef.current !== token) return
+        await runHookGroup(hookGroups?.afterEach, 'afterEach', playbackCase.caseId)
+        if (playbackTokenRef.current !== token) return
       }
+
+      await runHookGroup(hookGroups?.afterAll, 'afterAll', null)
 
       if (playbackTokenRef.current === token) onPlaybackCompleteRef.current?.(token)
     }

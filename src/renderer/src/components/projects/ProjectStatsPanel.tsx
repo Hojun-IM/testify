@@ -21,33 +21,29 @@ const RANGE_ITEMS = [
 
 const CURRENT_YEAR = new Date().getFullYear()
 
-// TODO: 테스트 실행 이력(test_run) API가 생기면 실제 "가장 오래된 테스트 실행" 연도로 교체
-const OLDEST_TEST_EXECUTION_YEAR = CURRENT_YEAR - 2
-
-const YEAR_OPTIONS: DropdownOption[] = Array.from(
-  { length: CURRENT_YEAR - OLDEST_TEST_EXECUTION_YEAR + 1 },
-  (_, i) => {
-    const year = CURRENT_YEAR - i
-    return { value: String(year), label: String(year) }
-  }
-)
+// 최근 3년 정도면 실제 실행 이력을 훑어보기에 충분하다
+const YEAR_OPTIONS: DropdownOption[] = Array.from({ length: 3 }, (_, i) => {
+  const year = CURRENT_YEAR - i
+  return { value: String(year), label: String(year) }
+})
 
 type DayCell = { date: Date; count: number }
 
 const TOOLTIP_OFFSET = 12
 
-// TODO: 테스트 실행 이력(test_run) API가 생기면 실제 일별 실행 횟수로 교체
-function mockCountForDate(date: Date): number {
-  const seed = date.getFullYear() * 372 + date.getMonth() * 31 + date.getDate()
-  const value = (seed * 2654435761) % 100
-  return value < 55 ? 0 : Math.floor(((value - 55) / 45) * 8)
+function formatDate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
-function buildYearDays(year: number): DayCell[] {
+// counts는 "YYYY-MM-DD" -> 실행 횟수. projects:executionHistory가 돌려주는 실제 데이터를 채워 넣는다
+function buildYearDays(year: number, counts: Map<string, number>): DayCell[] {
   const result: DayCell[] = []
   const date = new Date(year, 0, 1)
   while (date.getFullYear() === year) {
-    result.push({ date: new Date(date), count: mockCountForDate(date) })
+    result.push({ date: new Date(date), count: counts.get(formatDate(date)) ?? 0 })
     date.setDate(date.getDate() + 1)
   }
   return result
@@ -61,23 +57,30 @@ function levelClass(count: number): string {
   return styles.level4
 }
 
-function formatDate(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
-
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
-export function ProjectStatsPanel(): JSX.Element {
+export function ProjectStatsPanel({ projectId }: { projectId: string }): JSX.Element {
   const [range, setRange] = useState<RangeOption>('all')
   const [year, setYear] = useState(String(CURRENT_YEAR))
-  const cells = useMemo(() => buildYearDays(Number(year)), [year])
+  // "YYYY-MM-DD" -> 실행 횟수. 대시보드에서 케이스가 실제로 재생되며 남긴 test_case_runs 기준
+  const [counts, setCounts] = useState<Map<string, number>>(new Map())
   const [hover, setHover] = useState<{ x: number; y: number; date: Date; count: number } | null>(null)
   const todayCellRef = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    window.api.projects.executionHistory({ projectId, year: Number(year) }).then((entries) => {
+      if (cancelled) return
+      setCounts(new Map(entries.map((entry) => [entry.date, entry.count])))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [projectId, year])
+
+  const cells = useMemo(() => buildYearDays(Number(year), counts), [year, counts])
 
   const today = useMemo(() => {
     const date = new Date()

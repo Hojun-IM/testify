@@ -247,3 +247,47 @@ export type TestHooksSetInput = {
   test_id: string
   hook_ids: string[]
 }
+
+// ── 테스트 실행 이력 ──────────────────────────────────────────────
+// 대시보드에서 케이스를 실제로 재생할 때마다 남기는 기록. 프로젝트 상세의
+// 날짜별 실행 횟수 히트맵과 케이스/테스트 목록의 "마지막 실행" 표시가 이 데이터를 사용한다.
+
+export type TestRunStatus = 'running' | 'success' | 'failure' | 'error' | 'partial'
+export type TestCaseRunStatus = 'success' | 'failure' | 'error' | 'skipped'
+
+export type TestRun = {
+  id: string
+  test_id: string
+  status: TestRunStatus
+  started_at: string
+  finished_at: string | null
+  created_by: string
+}
+
+export type TestRunStartInput = {
+  test_id: string
+}
+
+export type TestRunFinishInput = {
+  id: string
+  status: TestRunStatus
+}
+
+export type TestCaseRunRecordInput = {
+  test_run_id: string
+  test_case_id: string
+  status: TestCaseRunStatus
+  message?: string | null
+  duration_ms?: number | null
+}
+
+export type ProjectExecutionHistoryParams = {
+  projectId: string
+  year: number
+}
+
+// 날짜(YYYY-MM-DD)별 케이스 실행 횟수
+export type ProjectExecutionHistoryEntry = {
+  date: string
+  count: number
+}

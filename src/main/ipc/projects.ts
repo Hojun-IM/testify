@@ -5,6 +5,8 @@ import type {
   Project,
   ProjectCreateInput,
   ProjectEnvironment,
+  ProjectExecutionHistoryEntry,
+  ProjectExecutionHistoryParams,
   ProjectListParams,
   ProjectStatus,
   ProjectSummary,
@@ -137,4 +139,27 @@ export function registerProjectHandlers(): void {
     const db = getDb()
     db.prepare('DELETE FROM projects WHERE id = ?').run(id)
   })
+
+  // 프로젝트 상세의 실행 횟수 히트맵이 쓰는, 연도 내 날짜별 실제 케이스 실행 횟수.
+  // started_at은 UTC로 저장되어 있어 'localtime'으로 변환한 뒤 날짜를 잘라야
+  // 자정 근처(예: 한국 시간 오전 9시 이전) 실행이 하루 전 날짜로 집계되지 않는다.
+  ipcMain.handle(
+    'projects:executionHistory',
+    (_event, params: ProjectExecutionHistoryParams): ProjectExecutionHistoryEntry[] => {
+      const db = getDb()
+      return db
+        .prepare(
+          `
+            SELECT date(tcr.started_at, 'localtime') AS date, COUNT(*) AS count
+            FROM test_case_runs tcr
+            JOIN test_cases tc ON tc.id = tcr.test_case_id
+            JOIN tests t ON t.id = tc.test_id
+            WHERE t.project_id = @projectId
+              AND strftime('%Y', tcr.started_at, 'localtime') = @year
+            GROUP BY date(tcr.started_at, 'localtime')
+          `
+        )
+        .all({ projectId: params.projectId, year: String(params.year) }) as ProjectExecutionHistoryEntry[]
+    }
+  )
 }

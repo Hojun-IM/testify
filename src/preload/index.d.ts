@@ -8,6 +8,8 @@ import type {
   Project,
   ProjectCreateInput,
   ProjectEnvironment,
+  ProjectExecutionHistoryEntry,
+  ProjectExecutionHistoryParams,
   ProjectListParams,
   ProjectStatus,
   ProjectSummary,
@@ -17,10 +19,14 @@ import type {
   TestCaseCreateInput,
   TestCaseListParams,
   TestCaseReorderInput,
+  TestCaseRunRecordInput,
   TestCaseUpdateInput,
   TestCreateInput,
   TestHooksSetInput,
   TestListParams,
+  TestRun,
+  TestRunFinishInput,
+  TestRunStartInput,
   TestUpdateInput
 } from '../shared/types'
 
@@ -36,6 +42,7 @@ declare global {
         update: (input: ProjectUpdateInput) => Promise<Project>
         setStatus: (id: string, status: ProjectStatus) => Promise<Project>
         remove: (id: string) => Promise<void>
+        executionHistory: (params: ProjectExecutionHistoryParams) => Promise<ProjectExecutionHistoryEntry[]>
       }
       tests: {
         list: (params: TestListParams) => Promise<Test[]>
@@ -60,6 +67,11 @@ declare global {
       }
       http: {
         request: (spec: ApiRequestSpec) => Promise<HttpRequestResult>
+      }
+      testRuns: {
+        start: (input: TestRunStartInput) => Promise<TestRun>
+        recordCase: (input: TestCaseRunRecordInput) => Promise<void>
+        finish: (input: TestRunFinishInput) => Promise<void>
       }
     }
   }

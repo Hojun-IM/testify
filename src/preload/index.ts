@@ -5,16 +5,20 @@ import type {
   HookListParams,
   HookUpdateInput,
   ProjectCreateInput,
+  ProjectExecutionHistoryParams,
   ProjectListParams,
   ProjectStatus,
   ProjectUpdateInput,
   TestCaseCreateInput,
   TestCaseListParams,
   TestCaseReorderInput,
+  TestCaseRunRecordInput,
   TestCaseUpdateInput,
   TestCreateInput,
   TestHooksSetInput,
   TestListParams,
+  TestRunFinishInput,
+  TestRunStartInput,
   TestUpdateInput
 } from '../shared/types'
 
@@ -26,7 +30,9 @@ const api = {
     update: (input: ProjectUpdateInput) => ipcRenderer.invoke('projects:update', input),
     setStatus: (id: string, status: ProjectStatus) =>
       ipcRenderer.invoke('projects:setStatus', { id, status }),
-    remove: (id: string) => ipcRenderer.invoke('projects:remove', id)
+    remove: (id: string) => ipcRenderer.invoke('projects:remove', id),
+    executionHistory: (params: ProjectExecutionHistoryParams) =>
+      ipcRenderer.invoke('projects:executionHistory', params)
   },
   tests: {
     list: (params: TestListParams) => ipcRenderer.invoke('tests:list', params),
@@ -51,6 +57,11 @@ const api = {
   },
   http: {
     request: (spec: ApiRequestSpec) => ipcRenderer.invoke('http:request', spec)
+  },
+  testRuns: {
+    start: (input: TestRunStartInput) => ipcRenderer.invoke('testRuns:start', input),
+    recordCase: (input: TestCaseRunRecordInput) => ipcRenderer.invoke('testRuns:recordCase', input),
+    finish: (input: TestRunFinishInput) => ipcRenderer.invoke('testRuns:finish', input)
   }
 }
 
