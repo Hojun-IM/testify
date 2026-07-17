@@ -175,7 +175,7 @@ export function ProjectHooksSection({
       <div className={styles.controlsRow}>
         <div className={styles.left}>
           <Dropdown label="타입" options={TYPE_OPTIONS} value={type} onChange={setType} />
-          <Dropdown label="시점" options={TIMING_OPTIONS} value={timing} onChange={setTiming} minWidth={168} />
+          <Dropdown label="시점" options={TIMING_OPTIONS} value={timing} onChange={setTiming} minWidth={120} />
         </div>
         <div className={styles.right}>
           <Button onClick={openCreatePanel}>새 훅</Button>

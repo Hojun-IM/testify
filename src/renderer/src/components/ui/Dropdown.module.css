@@ -15,6 +15,13 @@
   white-space: nowrap;
 }
 
+.valueGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
 .menu {
   -webkit-app-region: no-drag;
   position: absolute;
