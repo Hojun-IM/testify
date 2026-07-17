@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { TestCasePolicy, TestCaseStatus, TestCaseStep, TestType } from '../../../../shared/types'
 import { SlidePanel } from '../ui/SlidePanel'
 import { Button } from '../ui/Button'
