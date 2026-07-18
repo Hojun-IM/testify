@@ -291,3 +291,45 @@ export type ProjectExecutionHistoryEntry = {
   date: string
   count: number
 }
+
+// ── 데스크톱 펫 ──────────────────────────────────────────────────
+// 메인 창과 별개로 항상 위에 떠 있는 작은 캐릭터 창. 대시보드의 테스트 재생 상태를
+// 애니메이션으로 보여주고, 클릭하면 실행 요약과 제어 버튼(재실행/중지/취소)을 제공한다.
+// 메인 창을 닫아도(숨김 처리) 프로세스는 살아 있으므로 실행 중인 테스트와 펫은 계속 동작한다.
+
+export type PetRunStatus = 'idle' | 'running' | 'success' | 'failure'
+
+export type PetRunState = {
+  status: PetRunStatus
+  // 현재(또는 마지막) 재생 세션의 케이스 수 집계
+  total: number
+  passed: number
+  failed: number
+  // 실행 중일 때 지금 돌고 있는 케이스 이름
+  runningCaseName: string | null
+  startedAt: number | null
+  finishedAt: number | null
+  // 대시보드에 재실행할 마지막 실행 케이스 목록이 남아 있는지
+  canRerun: boolean
+  // 툴팁에 표시할 안내 문구 (중지/취소 등)
+  message: string | null
+}
+
+// 펫 툴팁 버튼이 보내는 제어 명령. rerun은 "실행/재실행"을 겸한다
+export type PetCommandAction = 'rerun' | 'stop' | 'cancel' | 'open-app'
+
+// 상태별 커스텀 GIF 오버라이드 — {userData}/pet-animations/{status}.gif 파일이 있으면
+// 내장 스프라이트 대신 해당 GIF를 재생한다 (data URL로 전달)
+export type PetAssetMap = Partial<Record<PetRunStatus, string>>
+
+// 펫 창/스프라이트 크기 프리셋 — 실제 픽셀 수치는 shared/petSize.ts에서 계산한다
+export type PetSize = 'small' | 'medium' | 'large'
+
+// 펫 외형 — 선택된 캐릭터 id + 크기 + 상태별 커스텀 GIF 오버라이드.
+// 캐릭터 스프라이트 데이터 자체는 렌더러(src/renderer/src/pet/characters)가 들고 있고,
+// 메인 프로세스는 어떤 캐릭터/크기를 쓸지만 저장/배포한다
+export type PetAppearance = {
+  characterId: string
+  size: PetSize
+  overrides: PetAssetMap
+}

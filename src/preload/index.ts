@@ -1,6 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import type { IpcRendererEvent } from 'electron'
 import type {
   ApiRequestSpec,
+  PetCommandAction,
+  PetRunState,
   HookCreateInput,
   HookListParams,
   HookUpdateInput,
@@ -64,6 +67,16 @@ const api = {
     start: (input: TestRunStartInput) => ipcRenderer.invoke('testRuns:start', input),
     recordCase: (input: TestCaseRunRecordInput) => ipcRenderer.invoke('testRuns:recordCase', input),
     finish: (input: TestRunFinishInput) => ipcRenderer.invoke('testRuns:finish', input)
+  },
+  pet: {
+    // 대시보드가 재생 상태가 바뀔 때마다 펫에게 알린다
+    reportState: (state: PetRunState) => ipcRenderer.invoke('pet:reportState', state),
+    // 펫 툴팁 버튼(중지/취소 등)이 보낸 명령을 메인 창이 받아 처리한다
+    onCommand: (callback: (action: PetCommandAction) => void): (() => void) => {
+      const listener = (_event: IpcRendererEvent, action: PetCommandAction): void => callback(action)
+      ipcRenderer.on('pet:executeCommand', listener)
+      return () => ipcRenderer.removeListener('pet:executeCommand', listener)
+    }
   }
 }
 

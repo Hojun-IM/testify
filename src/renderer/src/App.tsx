@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ProjectSummary, Test, TestCase } from '../../shared/types'
 import { Sidebar, type SidebarTab } from './components/layout/Sidebar'
 import { PanelIcon } from './components/ui/icons'
@@ -21,6 +21,13 @@ function App(): JSX.Element {
   // 테스트 케이스 목록의 "실행"(단건 또는 일괄 선택)에서 대시보드로 넘겨 재생할 케이스들
   const [autoPlayCases, setAutoPlayCases] = useState<TestCase[] | null>(null)
 
+  // 데스크톱 펫 연동 — 마지막으로 실행한 케이스 목록을 대시보드 밖(App)에서도 기억해서
+  // 대시보드가 언마운트돼 있어도 펫의 "실행/재실행" 명령을 처리할 수 있게 한다
+  const lastRunCasesRef = useRef<TestCase[]>([])
+  // 펫의 중지/취소 명령을 대시보드로 전달하는 신호. id로 같은 명령의 중복 실행을 막는다
+  const [petCommand, setPetCommand] = useState<{ id: number; action: 'stop' | 'cancel' } | null>(null)
+  const petCommandSeqRef = useRef(0)
+
   // 사이드바 "새 프로젝트"
   const [projectFormOpen, setProjectFormOpen] = useState(false)
 
@@ -37,6 +44,21 @@ function App(): JSX.Element {
     setActiveTab('dashboard')
     setAutoPlayCases(testCases)
   }
+
+  useEffect(() => {
+    return window.api.pet.onCommand((action) => {
+      if (action === 'rerun') {
+        // 새 배열로 넘겨야 대시보드의 autoPlay 중복 실행 가드(참조 비교)에 걸리지 않는다
+        if (lastRunCasesRef.current.length > 0) runCasesOnDashboard([...lastRunCasesRef.current])
+        return
+      }
+      if (action === 'stop' || action === 'cancel') {
+        petCommandSeqRef.current += 1
+        setPetCommand({ id: petCommandSeqRef.current, action })
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // 테스트 목록의 "실행" — 해당 테스트에 속한 자동화 케이스 전체를 대시보드에서 실행
   async function runTestOnDashboard(test: Test): Promise<void> {
@@ -149,6 +171,10 @@ function App(): JSX.Element {
             sidebarCollapsed={!sidebarOpen}
             autoPlayCases={autoPlayCases}
             onAutoPlayConsumed={() => setAutoPlayCases(null)}
+            petCommand={petCommand}
+            onCasesPlayed={(cases) => {
+              lastRunCasesRef.current = cases
+            }}
             onTestRunStart={handleTestRunStart}
           />
         ) : activeTab === 'hook' ? (
