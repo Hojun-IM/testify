@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { Test, TestType } from '../../../../shared/types'
 import { Dropdown, type DropdownOption } from '../ui/Dropdown'
 import { Button } from '../ui/Button'
@@ -8,6 +8,8 @@ import { Pagination } from '../ui/Pagination'
 import { IconMenuButton } from '../ui/IconMenuButton'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { TestFormModal, type TestFormValues } from './TestFormModal'
+import { useDebouncedQuery } from '../../hooks/useDebouncedQuery'
+import { formatDateTime } from '../../utils/format'
 import styles from './ProjectTestsSection.module.css'
 
 const TYPE_OPTIONS: DropdownOption[] = [
@@ -17,10 +19,6 @@ const TYPE_OPTIONS: DropdownOption[] = [
 ]
 
 const PAGE_SIZE = 8
-
-function formatDateTime(iso: string): string {
-  return iso.replace('T', ' ').slice(0, 16)
-}
 
 function buildColumns(
   onEdit: (test: Test) => void,
@@ -92,20 +90,11 @@ export function ProjectTestsSection({
     setTests(result)
   }
 
-  useEffect(() => {
-    let cancelled = false
-
-    const timer = setTimeout(() => {
-      window.api.tests.list({ projectId, type: type as TestType | 'all', search }).then((result) => {
-        if (!cancelled) setTests(result)
-      })
-    }, 200)
-
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-  }, [projectId, search, type])
+  useDebouncedQuery(
+    () => window.api.tests.list({ projectId, type: type as TestType | 'all', search }),
+    setTests,
+    [projectId, search, type]
+  )
 
   const totalPages = Math.max(1, Math.ceil(tests.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)

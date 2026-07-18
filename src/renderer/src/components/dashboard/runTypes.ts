@@ -15,6 +15,21 @@ export type RunCase = {
 
 export type LogLevel = 'info' | 'step' | 'success' | 'error'
 
+// 실행 로그 레벨의 표시 텍스트/색상 클래스 (실행 로그 탭과 케이스 결과 패널이 공유)
+export const LOG_LEVEL_LABELS: Record<LogLevel, string> = {
+  info: 'INFO',
+  step: 'STEP',
+  success: 'PASS',
+  error: 'FAIL'
+}
+
+export const LOG_LEVEL_CLASSES: Record<LogLevel, string> = {
+  info: 'text-ivory-faint',
+  step: 'text-ivory-dim',
+  success: 'text-ok',
+  error: 'text-danger'
+}
+
 export type RunLogEntry = {
   id: number
   time: string

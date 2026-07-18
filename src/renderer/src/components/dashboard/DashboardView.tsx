@@ -20,7 +20,8 @@ import styles from './DashboardView.module.css'
 
 const MAX_DEVTOOL_ENTRIES = 400
 
-const HOOK_TIMING_LABELS: Record<HookTiming, string> = {
+// 실행 로그에 표시하는 한글 레이블 — 훅 관리 UI의 영문 레이블(hooks/hookTimings.ts)과 용도가 다르다
+const HOOK_TIMING_LOG_LABELS: Record<HookTiming, string> = {
   beforeAll: '전체 시작 전',
   beforeEach: '케이스 시작 전',
   afterEach: '케이스 종료 후',
@@ -250,16 +251,16 @@ export function DashboardView({
       return
     }
     if (event.kind === 'hook-start') {
-      appendPlayLog('info', `⚙ [훅·${HOOK_TIMING_LABELS[event.timing]}] ${event.name} 실행 시작`, event.caseId)
+      appendPlayLog('info', `⚙ [훅·${HOOK_TIMING_LOG_LABELS[event.timing]}] ${event.name} 실행 시작`, event.caseId)
       return
     }
     if (event.kind === 'hook-end') {
       if (event.passed) {
-        appendPlayLog('success', `⚙ ✓ [훅·${HOOK_TIMING_LABELS[event.timing]}] ${event.name} 완료`, event.caseId)
+        appendPlayLog('success', `⚙ ✓ [훅·${HOOK_TIMING_LOG_LABELS[event.timing]}] ${event.name} 완료`, event.caseId)
       } else {
         appendPlayLog(
           'error',
-          `⚙ ✕ [훅·${HOOK_TIMING_LABELS[event.timing]}] ${event.name} 실패 — ${event.failMessage ?? ''}`,
+          `⚙ ✕ [훅·${HOOK_TIMING_LOG_LABELS[event.timing]}] ${event.name} 실패 — ${event.failMessage ?? ''}`,
           event.caseId
         )
       }

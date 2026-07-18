@@ -2,11 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react'
 import type { ProjectEnvironment, ProjectSummary } from '../../../../shared/types'
 import { StatusBadge } from '../ui/StatusBadge'
 import { EnvironmentBadgeList } from './EnvironmentBadgeList'
+import { formatDateTime } from '../../utils/format'
 import styles from './ProjectInfoPanel.module.css'
-
-function formatDateTime(iso: string): string {
-  return iso.replace('T', ' ').slice(0, 16)
-}
 
 function InfoRow({ label, children }: { label: string; children: ReactNode }): JSX.Element {
   return (

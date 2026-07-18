@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { SlidePanel } from '../ui/SlidePanel'
 import { ChevronLeftIcon } from '../ui/icons'
-import type { LogLevel, RunCase, RunLogEntry } from './runTypes'
+import { LOG_LEVEL_CLASSES, LOG_LEVEL_LABELS, type RunCase, type RunLogEntry } from './runTypes'
 import styles from './CaseResultsPanel.module.css'
 
 export type ResultFilter = 'all' | 'waiting' | 'passed' | 'failed'
@@ -18,20 +18,6 @@ const STATUS_LABELS: Record<RunCase['status'], string> = {
   running: '실행 중',
   passed: '성공',
   failed: '실패'
-}
-
-const LEVEL_LABELS: Record<LogLevel, string> = {
-  info: 'INFO',
-  step: 'STEP',
-  success: 'PASS',
-  error: 'FAIL'
-}
-
-const LEVEL_CLASSES: Record<LogLevel, string> = {
-  info: 'text-ivory-faint',
-  step: 'text-ivory-dim',
-  success: 'text-ok',
-  error: 'text-danger'
 }
 
 function formatDuration(durationMs: number): string {
@@ -95,8 +81,8 @@ function CaseDetail({ runCase, logs }: { runCase: RunCase; logs: RunLogEntry[] }
             caseLogs.map((entry) => (
               <div key={entry.id} className={styles.logLine}>
                 <span className={`${styles.logTime} text-ivory-faint`}>{entry.time}</span>
-                <span className={`${styles.logLevel} ${LEVEL_CLASSES[entry.level]}`}>
-                  {LEVEL_LABELS[entry.level]}
+                <span className={`${styles.logLevel} ${LOG_LEVEL_CLASSES[entry.level]}`}>
+                  {LOG_LEVEL_LABELS[entry.level]}
                 </span>
                 <span
                   className={`${styles.logMessage} ${entry.level === 'error' ? 'text-danger' : 'text-ivory-dim'}`}

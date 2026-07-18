@@ -31,7 +31,9 @@ type DayCell = { date: Date; count: number }
 
 const TOOLTIP_OFFSET = 12
 
-function formatDate(date: Date): string {
+// 히트맵 데이터 조회/표시에 쓰는 로컬 기준 'YYYY-MM-DD' 키.
+// (utils/format의 formatDate는 ISO "문자열"을 자르는 함수라 Date 객체에는 쓸 수 없다)
+function toDateKey(date: Date): string {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
   const d = String(date.getDate()).padStart(2, '0')
@@ -43,7 +45,7 @@ function buildYearDays(year: number, counts: Map<string, number>): DayCell[] {
   const result: DayCell[] = []
   const date = new Date(year, 0, 1)
   while (date.getFullYear() === year) {
-    result.push({ date: new Date(date), count: counts.get(formatDate(date)) ?? 0 })
+    result.push({ date: new Date(date), count: counts.get(toDateKey(date)) ?? 0 })
     date.setDate(date.getDate() + 1)
   }
   return result
@@ -151,7 +153,7 @@ export function ProjectStatsPanel({ projectId }: { projectId: string }): JSX.Ele
           className={`${styles.tooltip} bg-raised border-line text-ivory`}
           style={{ left: hover.x + TOOLTIP_OFFSET, top: hover.y + TOOLTIP_OFFSET }}
         >
-          <span className={styles.tooltipDate}>{formatDate(hover.date)}</span> · 실행 {hover.count}회
+          <span className={styles.tooltipDate}>{toDateKey(hover.date)}</span> · 실행 {hover.count}회
         </span>
       )}
     </div>
