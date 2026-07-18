@@ -34,12 +34,16 @@ const HOOK_TIMING_LOG_LABELS: Record<HookTiming, string> = {
 export function DashboardView({
   sidebarCollapsed,
   autoPlayCases,
-  onAutoPlayConsumed
+  onAutoPlayConsumed,
+  onTestRunStart
 }: {
   sidebarCollapsed?: boolean
   // 테스트 케이스 목록의 "실행"(단건/일괄)에서 넘어온, 재생할 케이스들
   autoPlayCases?: TestCase[] | null
   onAutoPlayConsumed?: () => void
+  // 재생이 실제로 시작될 때(최초 실행/재실행 모두)마다 호출 — 사이드바 최근 항목을
+  // "실행한 테스트의 프로젝트" 기준으로 갱신하는 데 쓴다
+  onTestRunStart?: (testId: string) => void
 }): JSX.Element {
   const [resultsFilter, setResultsFilter] = useState<ResultFilter | null>(null)
 
@@ -106,6 +110,7 @@ export function DashboardView({
     const runnable = testCases.filter((testCase) => testCase.steps.some((step) => step.automation))
     if (runnable.length === 0) return false
     lastPlayedCasesRef.current = runnable
+    onTestRunStart?.(runnable[0].test_id)
 
     // 대시보드로 넘어오는 케이스는 항상 테스트 하나에 속해 있으므로(단건/일괄 실행 모두
     // 같은 테스트 화면에서 시작됨) 첫 케이스의 test_id로 실행 세션을 연다
