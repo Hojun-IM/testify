@@ -18,9 +18,9 @@ import styles from './Sidebar.module.css'
 
 export type SidebarTab = 'project' | 'dashboard' | 'hook'
 
-const menuItems = [{ icon: <PlusIcon />, label: '새 프로젝트' }]
+const MENU_ITEMS = [{ icon: <PlusIcon />, label: '새 프로젝트' }]
 
-const moreItems = [
+const MORE_ITEMS = [
   { icon: <PlusIcon />, label: '새 테스트' },
   { icon: <ArtifactIcon />, label: '새 훅' }
 ]
@@ -72,7 +72,7 @@ export function Sidebar({
       />
 
       <MenuList>
-        {menuItems.map((item) => (
+        {MENU_ITEMS.map((item) => (
           <MenuItem key={item.label} icon={item.icon} label={item.label} />
         ))}
         <MenuItem
@@ -84,7 +84,7 @@ export function Sidebar({
           onClick={() => setMoreOpen((prev) => !prev)}
         />
         {moreOpen &&
-          moreItems.map((item) => <MenuItem key={item.label} icon={item.icon} label={item.label} />)}
+          MORE_ITEMS.map((item) => <MenuItem key={item.label} icon={item.icon} label={item.label} />)}
       </MenuList>
 
       <div className={styles.recentSection}>
