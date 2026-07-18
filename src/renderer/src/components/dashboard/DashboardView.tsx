@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Hook, HookTiming, TestCase, TestRunStatus } from '../../../../shared/types'
+import type { Hook, HookTiming, PetRunState, TestCase, TestRunStatus } from '../../../../shared/types'
 import { Button } from '../ui/Button'
 import { PlayIcon } from '../ui/icons'
 import { RunStatsRow } from './RunStatsRow'
@@ -30,15 +30,34 @@ const HOOK_TIMING_LABELS: Record<HookTiming, string> = {
 
 // 대시보드는 테스트 케이스 실행(재생)을 지켜보고 결과를 확인하는 화면이다.
 // 케이스 기록/등록은 테스트 케이스 목록의 생성 패널(브라우저 기록)에서 한다
+// 데스크톱 펫에 보고하는 실행 상태의 초기값 — 세션이 없을 때의 모양
+const PET_INITIAL_STATE: PetRunState = {
+  status: 'idle',
+  total: 0,
+  passed: 0,
+  failed: 0,
+  runningCaseName: null,
+  startedAt: null,
+  finishedAt: null,
+  canRerun: false,
+  message: null
+}
+
 export function DashboardView({
   sidebarCollapsed,
   autoPlayCases,
-  onAutoPlayConsumed
+  onAutoPlayConsumed,
+  petCommand,
+  onCasesPlayed
 }: {
   sidebarCollapsed?: boolean
   // 테스트 케이스 목록의 "실행"(단건/일괄)에서 넘어온, 재생할 케이스들
   autoPlayCases?: TestCase[] | null
   onAutoPlayConsumed?: () => void
+  // 데스크톱 펫 툴팁에서 보낸 중지/취소 명령 (App이 IPC로 받아 전달)
+  petCommand?: { id: number; action: 'stop' | 'cancel' } | null
+  // 실행을 시작할 때마다 App에 케이스 목록을 알려 펫의 재실행 명령에 쓰게 한다
+  onCasesPlayed?: (cases: TestCase[]) => void
 }): JSX.Element {
   const [resultsFilter, setResultsFilter] = useState<ResultFilter | null>(null)
 
@@ -93,6 +112,16 @@ export function DashboardView({
     setPlayCases((prev) => prev.map((item) => (item.id === caseId ? { ...item, ...patch } : item)))
   }
 
+  // 데스크톱 펫으로 보고한 마지막 상태 — 부분 갱신(reportPet)을 위해 전체 스냅샷을 들고 있는다
+  const petStateRef = useRef<PetRunState>(PET_INITIAL_STATE)
+
+  function reportPet(patch: Partial<PetRunState>): void {
+    const next = { ...petStateRef.current, ...patch }
+    petStateRef.current = next
+    // 펫 상태 보고 실패는 재생에 영향을 주지 않도록 조용히 무시한다
+    void window.api.pet.reportState(next).catch(() => {})
+  }
+
   // 마지막으로 실행한 케이스들 — "재실행" 버튼이 이 목록을 다시 돌린다
   const lastPlayedCasesRef = useRef<TestCase[]>([])
   // 현재 재생 세션의 실행 기록(test_runs) id. 케이스 결과/완료 시점에 실제 DB에 남기는 데 쓴다.
@@ -105,6 +134,7 @@ export function DashboardView({
     const runnable = testCases.filter((testCase) => testCase.steps.some((step) => step.automation))
     if (runnable.length === 0) return false
     lastPlayedCasesRef.current = runnable
+    onCasesPlayed?.(runnable)
 
     // 대시보드로 넘어오는 케이스는 항상 테스트 하나에 속해 있으므로(단건/일괄 실행 모두
     // 같은 테스트 화면에서 시작됨) 첫 케이스의 test_id로 실행 세션을 연다
@@ -202,6 +232,17 @@ export function DashboardView({
     )
     setPlayLogs([])
     setPlaybackRequest({ token: playTokenRef.current, cases: playbackCases, hooks: hookGroups })
+    reportPet({
+      status: 'running',
+      total: runnable.length,
+      passed: 0,
+      failed: 0,
+      runningCaseName: null,
+      startedAt: Date.now(),
+      finishedAt: null,
+      canRerun: true,
+      message: null
+    })
     return true
   }
 
@@ -238,6 +279,7 @@ export function DashboardView({
       patchPlayCase(event.caseId, { status: 'running' })
       const runCase = playCasesRef.current.find((item) => item.id === event.caseId)
       appendPlayLog('info', `▶ [${runCase?.kind === 'api' ? 'API' : 'E2E'}] ${runCase?.name ?? event.caseId} 실행 시작`, event.caseId)
+      reportPet({ runningCaseName: runCase?.name ?? null })
       return
     }
     if (event.kind === 'step-result') {
@@ -276,6 +318,13 @@ export function DashboardView({
     if (event.passed) appendPlayLog('success', `✓ ${name} 통과`, event.caseId)
     else appendPlayLog('error', `✕ ${name} 실패 — ${event.failMessage ?? ''}`, event.caseId)
 
+    const petResults = [...playResultsRef.current.values()]
+    reportPet({
+      passed: petResults.filter(Boolean).length,
+      failed: petResults.filter((passed) => !passed).length,
+      runningCaseName: null
+    })
+
     // 실제 실행 이력으로 남긴다 — 프로젝트 상세의 실행 횟수 히트맵과 "마지막 실행" 표시가 이 데이터를 쓴다
     if (testRunIdRef.current) {
       void window.api.testRuns.recordCase({
@@ -304,6 +353,14 @@ export function DashboardView({
       void window.api.testRuns.finish({ id: testRunIdRef.current, status })
       testRunIdRef.current = null
     }
+
+    // 펫에도 최종 결과를 알린다 — 하나라도 실패했으면(부분 성공 포함) 실패 상태로 보여준다
+    reportPet({
+      status: results.length > 0 && passed === results.length ? 'success' : 'failure',
+      runningCaseName: null,
+      finishedAt: Date.now(),
+      message: results.length === 0 ? '실행된 케이스가 없습니다' : null
+    })
   }
 
   function stopPlayback(): void {
@@ -332,7 +389,61 @@ export function DashboardView({
       prev.map((item) => (item.status === 'running' ? { ...item, status: 'pending' } : item))
     )
     appendPlayLog('info', '사용자에 의해 실행이 중지되었습니다')
+    reportPet({
+      status: 'idle',
+      runningCaseName: null,
+      finishedAt: Date.now(),
+      message: '사용자에 의해 실행이 중지되었습니다'
+    })
   }
+
+  // 취소 — 중지에 더해 이번 세션의 화면 결과까지 비운다 (펫 툴팁의 "취소" 버튼 전용)
+  function cancelPlayback(): void {
+    stopPlayback()
+    setPlayCases([])
+    setPlayLogs([])
+    setScenarioSteps([])
+    setScenarioOpen(false)
+    reportPet({
+      status: 'idle',
+      total: 0,
+      passed: 0,
+      failed: 0,
+      runningCaseName: null,
+      startedAt: null,
+      finishedAt: null,
+      message: '실행이 취소되었습니다'
+    })
+  }
+
+  // 데스크톱 펫 툴팁의 중지/취소 명령 처리 — 같은 id는 한 번만 실행된다
+  const handledPetCommandIdRef = useRef(0)
+  useEffect(() => {
+    if (!petCommand || petCommand.id === handledPetCommandIdRef.current) return
+    handledPetCommandIdRef.current = petCommand.id
+    if (!playbackRequest) return
+    if (petCommand.action === 'stop') stopPlayback()
+    else cancelPlayback()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [petCommand])
+
+  // 재생 중에 대시보드가 언마운트되면(탭 전환 등) 재생도 함께 끊기므로,
+  // 펫이 "실행 중"에 영원히 머무르지 않도록 중단 상태를 보고한다
+  const playingRef = useRef(false)
+  playingRef.current = playing
+  useEffect(() => {
+    return () => {
+      if (playingRef.current) {
+        reportPet({
+          status: 'idle',
+          runningCaseName: null,
+          finishedAt: Date.now(),
+          message: '대시보드를 벗어나 실행이 중단되었습니다'
+        })
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const runningCaseName = playing
     ? (playCases.find((item) => item.status === 'running')?.name ??

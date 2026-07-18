@@ -1,6 +1,8 @@
 import type {
   ApiRequestSpec,
   Hook,
+  PetCommandAction,
+  PetRunState,
   HookCreateInput,
   HookListParams,
   HookUpdateInput,
@@ -72,6 +74,10 @@ declare global {
         start: (input: TestRunStartInput) => Promise<TestRun>
         recordCase: (input: TestCaseRunRecordInput) => Promise<void>
         finish: (input: TestRunFinishInput) => Promise<void>
+      }
+      pet: {
+        reportState: (state: PetRunState) => Promise<void>
+        onCommand: (callback: (action: PetCommandAction) => void) => () => void
       }
     }
   }

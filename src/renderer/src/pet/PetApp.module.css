@@ -1,0 +1,227 @@
+/* 데스크톱 펫 창 — 창 전체(트레이 크기 설정에 따라 가변)는 투명하고, 펫과 툴팁 패널만 그린다.
+   --sprite-size 등은 PetApp.tsx가 shared/petSize.ts의 크기 프리셋 수치로 채워 넣는다 */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
+
+/* ── 펫 본체 ─────────────────────────────────────── */
+
+.petSlot {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--sprite-size, 128px);
+  height: var(--slot-height, 140px);
+  cursor: grab;
+}
+
+.petSlot:active {
+  cursor: grabbing;
+}
+
+.pet {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: var(--sprite-size, 128px);
+  height: var(--sprite-size, 128px);
+  will-change: transform;
+}
+
+.sprite {
+  width: var(--sprite-size, 128px);
+  height: var(--sprite-size, 128px);
+  image-rendering: pixelated;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.shadow {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--shadow-width, 84px);
+  height: var(--shadow-height, 12px);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.28);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+/* 몸체 모션은 CSS 애니메이션을 쓰지 않는다 — 연속 애니메이션은 매 vsync 컴포지팅으로
+   유휴 CPU를 상시 소모하므로, PetApp의 프레임 루프가 SpriteFrame.offsetY를
+   transform으로 프레임 단위 반영한다 */
+
+/* ── 툴팁 패널 ───────────────────────────────────── */
+
+.panel {
+  position: absolute;
+  bottom: var(--panel-bottom, 158px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 268px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #2a2825;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  color: #ece3d2;
+}
+
+/* 패널 아래 말꼬리 */
+.panel::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: #2a2825;
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8a8578;
+  flex-shrink: 0;
+}
+
+.dot-running {
+  background: #7fb8d9;
+  /* steps()로 이산 변화만 만들어 컴포지터가 프레임 경계에서만 일하게 한다 */
+  animation: pulse 1.4s steps(2, jump-none) infinite;
+}
+
+.dot-success {
+  background: #7fbf7f;
+}
+
+.dot-failure {
+  background: #d96c6c;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.statusLabel {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.closeButton {
+  border: none;
+  background: transparent;
+  color: #8a8578;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.closeButton:hover {
+  color: #ece3d2;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.panelBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 10px;
+}
+
+.caseName {
+  margin: 0;
+  font-size: 12px;
+  color: #ece3d2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary {
+  margin: 0;
+  font-size: 12px;
+  color: #cfc4ab;
+}
+
+.meta {
+  margin: 0;
+  font-size: 11.5px;
+  color: #8a8578;
+}
+
+.message {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: #cfa46a;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 6px;
+}
+
+.button {
+  flex: 1;
+  padding: 6px 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ece3d2;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.primary {
+  background: #4f6f52;
+  border-color: #5d8261;
+}
+
+.primary:hover:not(:disabled) {
+  background: #5d8261;
+}
+
+.danger {
+  background: #6f4444;
+  border-color: #855252;
+}
+
+.danger:hover:not(:disabled) {
+  background: #855252;
+}
