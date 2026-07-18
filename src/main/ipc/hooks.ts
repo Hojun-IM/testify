@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { randomUUID } from 'crypto'
-import { getDb, currentUser } from '../db'
+import { getDb, currentUser, likePattern } from '../db'
 import type {
   Hook,
   HookCreateInput,
@@ -43,7 +43,7 @@ export function registerHookHandlers(): void {
     }
     if (params.search && params.search.trim() !== '') {
       conditions.push("name LIKE @search ESCAPE '\\'")
-      args.search = `%${params.search.trim().replace(/[\\%_]/g, '\\$&')}%`
+      args.search = likePattern(params.search)
     }
 
     const rows = db

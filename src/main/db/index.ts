@@ -112,3 +112,9 @@ export function getDb(): Database.Database {
 export function currentUser(): string {
   return userInfo().username
 }
+
+// 이름 검색용 LIKE 패턴. 사용자 입력에 들어 있는 와일드카드(%/_)와 이스케이프 문자(\)를
+// 문자 그대로 매칭되도록 이스케이프한다 — 쿼리에서 ESCAPE '\'와 함께 사용
+export function likePattern(search: string): string {
+  return `%${search.trim().replace(/[\\%_]/g, '\\$&')}%`
+}
