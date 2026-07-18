@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Hook, HookTiming, TestType } from '../../../../shared/types'
 import { Dropdown, type DropdownOption } from '../ui/Dropdown'
 import { Button } from '../ui/Button'
@@ -7,7 +7,10 @@ import { Table, type TableColumn } from '../ui/Table'
 import { Switch } from '../ui/Switch'
 import { IconMenuButton } from '../ui/IconMenuButton'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
-import { HookFormPanel, HOOK_TIMING_LABELS, type HookFormValues } from './HookFormPanel'
+import { HookFormPanel, type HookFormValues } from './HookFormPanel'
+import { HOOK_TIMING_LABELS, HOOK_TIMING_ORDER } from './hookTimings'
+import { useDebouncedQuery } from '../../hooks/useDebouncedQuery'
+import { formatDateTime } from '../../utils/format'
 import styles from './ProjectHooksSection.module.css'
 
 const TYPE_OPTIONS: DropdownOption[] = [
@@ -18,25 +21,22 @@ const TYPE_OPTIONS: DropdownOption[] = [
 
 const TIMING_OPTIONS: DropdownOption[] = [
   { value: 'all', label: '전체' },
-  { value: 'beforeAll', label: 'Before All' },
-  { value: 'beforeEach', label: 'Before Each' },
-  { value: 'afterEach', label: 'After Each' },
-  { value: 'afterAll', label: 'After All' },
-  { value: 'onFailure', label: 'On Failure' }
+  ...HOOK_TIMING_ORDER.map((timing) => ({ value: timing, label: HOOK_TIMING_LABELS[timing] }))
 ]
-
-function formatDateTime(iso: string): string {
-  return iso.replace('T', ' ').slice(0, 16)
-}
 
 // 훅(사전/사후 공통 시나리오) 목록 및 CRUD.
 // projectId를 주면 해당 프로젝트 전용 훅을, 생략하면 전역 훅(사이드바 훅 탭)을 관리한다
 export function ProjectHooksSection({
   projectId,
-  sidebarCollapsed
+  sidebarCollapsed,
+  autoOpenCreate,
+  onAutoOpenConsumed
 }: {
   projectId?: string
   sidebarCollapsed?: boolean
+  // 사이드바 "새 훅" 버튼에서 훅 탭으로 넘어오자마자 생성 패널을 바로 띄우고 싶을 때 true로 전달
+  autoOpenCreate?: boolean
+  onAutoOpenConsumed?: () => void
 }): JSX.Element {
   const [search, setSearch] = useState('')
   const [type, setType] = useState('all')
@@ -58,28 +58,39 @@ export function ProjectHooksSection({
     setHooks(result)
   }
 
-  useEffect(() => {
-    let cancelled = false
-
-    const timer = setTimeout(() => {
-      window.api.hooks
-        .list({ projectId, type: type as TestType | 'all', timing: timing as HookTiming | 'all', search })
-        .then((result) => {
-          if (!cancelled) setHooks(result)
-        })
-    }, 200)
-
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-  }, [projectId, search, type, timing])
+  useDebouncedQuery(
+    () =>
+      window.api.hooks.list({
+        projectId,
+        type: type as TestType | 'all',
+        timing: timing as HookTiming | 'all',
+        search
+      }),
+    setHooks,
+    [projectId, search, type, timing]
+  )
 
   function openCreatePanel(): void {
     setPanelMode('create')
     setEditingHook(null)
     setPanelOpen(true)
   }
+
+  // 이 정확한 autoOpenCreate 신호를 이미 처리했는지 — 값 자체가 boolean이라 매 렌더마다
+  // 새로 true로 "보일" 수는 없지만, StrictMode 이중 렌더/재마운트에도 한 번만 열리도록 가드한다
+  const autoOpenHandledRef = useRef(false)
+
+  useEffect(() => {
+    if (!autoOpenCreate || autoOpenHandledRef.current) return
+    autoOpenHandledRef.current = true
+    openCreatePanel()
+    onAutoOpenConsumed?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenCreate])
+
+  useEffect(() => {
+    if (!autoOpenCreate) autoOpenHandledRef.current = false
+  }, [autoOpenCreate])
 
   function openEditPanel(hook: Hook): void {
     setPanelMode('edit')

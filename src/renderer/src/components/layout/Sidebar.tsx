@@ -18,20 +18,16 @@ import styles from './Sidebar.module.css'
 
 export type SidebarTab = 'project' | 'dashboard' | 'hook'
 
-const menuItems = [{ icon: <PlusIcon />, label: '새 프로젝트' }]
-
-const moreItems = [
-  { icon: <PlusIcon />, label: '새 테스트' },
-  { icon: <ArtifactIcon />, label: '새 훅' }
-]
-
 export function Sidebar({
   onCollapse,
   recentProjects,
   onSelectRecent,
   onGoToList,
   activeTab,
-  onTabChange
+  onTabChange,
+  onCreateProject,
+  onCreateTest,
+  onCreateHook
 }: {
   onCollapse: () => void
   recentProjects: ProjectSummary[]
@@ -39,6 +35,9 @@ export function Sidebar({
   onGoToList: () => void
   activeTab: SidebarTab
   onTabChange: (tab: SidebarTab) => void
+  onCreateProject: () => void
+  onCreateTest: () => void
+  onCreateHook: () => void
 }): JSX.Element {
   const [moreOpen, setMoreOpen] = useState(false)
 
@@ -72,9 +71,7 @@ export function Sidebar({
       />
 
       <MenuList>
-        {menuItems.map((item) => (
-          <MenuItem key={item.label} icon={item.icon} label={item.label} />
-        ))}
+        <MenuItem icon={<PlusIcon />} label="새 프로젝트" onClick={onCreateProject} />
         <MenuItem
           icon={<ChevronDownIcon />}
           iconClassName="chevron"
@@ -83,8 +80,12 @@ export function Sidebar({
           muted
           onClick={() => setMoreOpen((prev) => !prev)}
         />
-        {moreOpen &&
-          moreItems.map((item) => <MenuItem key={item.label} icon={item.icon} label={item.label} />)}
+        {moreOpen && (
+          <>
+            <MenuItem icon={<PlusIcon />} label="새 테스트" onClick={onCreateTest} />
+            <MenuItem icon={<ArtifactIcon />} label="새 훅" onClick={onCreateHook} />
+          </>
+        )}
       </MenuList>
 
       <div className={styles.recentSection}>

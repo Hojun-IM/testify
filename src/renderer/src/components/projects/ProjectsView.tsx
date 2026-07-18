@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { ProjectEnvironmentInput, ProjectSummary } from '../../../../shared/types'
 import { ContentDetailHeader } from '../layout/ContentDetailHeader'
 import { SearchInput } from '../ui/SearchInput'
-import { Dropdown, DropdownOption } from '../ui/Dropdown'
+import { Dropdown, type DropdownOption } from '../ui/Dropdown'
 import { Button } from '../ui/Button'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { ProjectCard } from './ProjectCard'
 import { ProjectFormModal, type ProjectFormValues } from './ProjectFormModal'
+import { useDebouncedQuery } from '../../hooks/useDebouncedQuery'
 import styles from './ProjectsView.module.css'
 
-const filterOptions: DropdownOption[] = [
+const STATUS_OPTIONS: DropdownOption[] = [
   { value: 'all', label: '전체' },
   { value: 'active', label: 'Active' },
   { value: 'archived', label: 'Archived' }
@@ -40,20 +41,11 @@ export function ProjectsView({
     setProjects(result)
   }
 
-  useEffect(() => {
-    let cancelled = false
-
-    const timer = setTimeout(() => {
-      window.api.projects.list({ status: status as 'all' | 'active' | 'archived', search }).then((result) => {
-        if (!cancelled) setProjects(result)
-      })
-    }, 200)
-
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-  }, [search, status])
+  useDebouncedQuery(
+    () => window.api.projects.list({ status: status as 'all' | 'active' | 'archived', search }),
+    setProjects,
+    [search, status]
+  )
 
   function openCreateModal(): void {
     setFormMode('create')
@@ -99,7 +91,7 @@ export function ProjectsView({
       <ContentDetailHeader
         right={
           <>
-            <Dropdown label="필터 기준" options={filterOptions} value={status} onChange={setStatus} />
+            <Dropdown label="필터 기준" options={STATUS_OPTIONS} value={status} onChange={setStatus} />
             <Button onClick={openCreateModal}>새 프로젝트</Button>
           </>
         }

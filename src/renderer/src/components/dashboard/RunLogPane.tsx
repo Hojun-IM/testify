@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ConsoleLevel } from './LiveBrowserPane'
-import type { LogLevel, RunLogEntry } from './runTypes'
+import { LOG_LEVEL_CLASSES, LOG_LEVEL_LABELS, type RunLogEntry } from './runTypes'
 import styles from './RunLogPane.module.css'
 
 export type ConsoleEntry = {
@@ -26,20 +26,6 @@ const TAB_ITEMS: { value: LogTab; label: string }[] = [
   { value: 'console', label: '콘솔' },
   { value: 'network', label: '네트워크' }
 ]
-
-const LEVEL_LABELS: Record<LogLevel, string> = {
-  info: 'INFO',
-  step: 'STEP',
-  success: 'PASS',
-  error: 'FAIL'
-}
-
-const LEVEL_CLASSES: Record<LogLevel, string> = {
-  info: 'text-ivory-faint',
-  step: 'text-ivory-dim',
-  success: 'text-ok',
-  error: 'text-danger'
-}
 
 const CONSOLE_LEVEL_LABELS: Record<ConsoleLevel, string> = {
   log: 'LOG',
@@ -114,8 +100,8 @@ export function RunLogPane({
           logs.map((entry) => (
             <div key={entry.id} className={styles.line}>
               <span className={`${styles.time} text-ivory-faint`}>{entry.time}</span>
-              <span className={`${styles.level} ${LEVEL_CLASSES[entry.level]}`}>
-                {LEVEL_LABELS[entry.level]}
+              <span className={`${styles.level} ${LOG_LEVEL_CLASSES[entry.level]}`}>
+                {LOG_LEVEL_LABELS[entry.level]}
               </span>
               <span className={`${styles.message} ${entry.level === 'error' ? 'text-danger' : 'text-ivory-dim'}`}>
                 {entry.message}

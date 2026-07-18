@@ -20,7 +20,8 @@ import styles from './DashboardView.module.css'
 
 const MAX_DEVTOOL_ENTRIES = 400
 
-const HOOK_TIMING_LABELS: Record<HookTiming, string> = {
+// 실행 로그에 표시하는 한글 레이블 — 훅 관리 UI의 영문 레이블(hooks/hookTimings.ts)과 용도가 다르다
+const HOOK_TIMING_LOG_LABELS: Record<HookTiming, string> = {
   beforeAll: '전체 시작 전',
   beforeEach: '케이스 시작 전',
   afterEach: '케이스 종료 후',
@@ -30,6 +31,7 @@ const HOOK_TIMING_LABELS: Record<HookTiming, string> = {
 
 // 대시보드는 테스트 케이스 실행(재생)을 지켜보고 결과를 확인하는 화면이다.
 // 케이스 기록/등록은 테스트 케이스 목록의 생성 패널(브라우저 기록)에서 한다
+
 // 데스크톱 펫에 보고하는 실행 상태의 초기값 — 세션이 없을 때의 모양
 const PET_INITIAL_STATE: PetRunState = {
   status: 'idle',
@@ -48,7 +50,8 @@ export function DashboardView({
   autoPlayCases,
   onAutoPlayConsumed,
   petCommand,
-  onCasesPlayed
+  onCasesPlayed,
+  onTestRunStart
 }: {
   sidebarCollapsed?: boolean
   // 테스트 케이스 목록의 "실행"(단건/일괄)에서 넘어온, 재생할 케이스들
@@ -58,6 +61,9 @@ export function DashboardView({
   petCommand?: { id: number; action: 'stop' | 'cancel' } | null
   // 실행을 시작할 때마다 App에 케이스 목록을 알려 펫의 재실행 명령에 쓰게 한다
   onCasesPlayed?: (cases: TestCase[]) => void
+  // 재생이 실제로 시작될 때(최초 실행/재실행 모두)마다 호출 — 사이드바 최근 항목을
+  // "실행한 테스트의 프로젝트" 기준으로 갱신하는 데 쓴다
+  onTestRunStart?: (testId: string) => void
 }): JSX.Element {
   const [resultsFilter, setResultsFilter] = useState<ResultFilter | null>(null)
 
@@ -135,6 +141,7 @@ export function DashboardView({
     if (runnable.length === 0) return false
     lastPlayedCasesRef.current = runnable
     onCasesPlayed?.(runnable)
+    onTestRunStart?.(runnable[0].test_id)
 
     // 대시보드로 넘어오는 케이스는 항상 테스트 하나에 속해 있으므로(단건/일괄 실행 모두
     // 같은 테스트 화면에서 시작됨) 첫 케이스의 test_id로 실행 세션을 연다
@@ -292,16 +299,16 @@ export function DashboardView({
       return
     }
     if (event.kind === 'hook-start') {
-      appendPlayLog('info', `⚙ [훅·${HOOK_TIMING_LABELS[event.timing]}] ${event.name} 실행 시작`, event.caseId)
+      appendPlayLog('info', `⚙ [훅·${HOOK_TIMING_LOG_LABELS[event.timing]}] ${event.name} 실행 시작`, event.caseId)
       return
     }
     if (event.kind === 'hook-end') {
       if (event.passed) {
-        appendPlayLog('success', `⚙ ✓ [훅·${HOOK_TIMING_LABELS[event.timing]}] ${event.name} 완료`, event.caseId)
+        appendPlayLog('success', `⚙ ✓ [훅·${HOOK_TIMING_LOG_LABELS[event.timing]}] ${event.name} 완료`, event.caseId)
       } else {
         appendPlayLog(
           'error',
-          `⚙ ✕ [훅·${HOOK_TIMING_LABELS[event.timing]}] ${event.name} 실패 — ${event.failMessage ?? ''}`,
+          `⚙ ✕ [훅·${HOOK_TIMING_LOG_LABELS[event.timing]}] ${event.name} 실패 — ${event.failMessage ?? ''}`,
           event.caseId
         )
       }

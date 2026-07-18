@@ -35,13 +35,15 @@ const api = {
       ipcRenderer.invoke('projects:setStatus', { id, status }),
     remove: (id: string) => ipcRenderer.invoke('projects:remove', id),
     executionHistory: (params: ProjectExecutionHistoryParams) =>
-      ipcRenderer.invoke('projects:executionHistory', params)
+      ipcRenderer.invoke('projects:executionHistory', params),
+    get: (id: string) => ipcRenderer.invoke('projects:get', id)
   },
   tests: {
     list: (params: TestListParams) => ipcRenderer.invoke('tests:list', params),
     create: (input: TestCreateInput) => ipcRenderer.invoke('tests:create', input),
     update: (input: TestUpdateInput) => ipcRenderer.invoke('tests:update', input),
-    remove: (id: string) => ipcRenderer.invoke('tests:remove', id)
+    remove: (id: string) => ipcRenderer.invoke('tests:remove', id),
+    get: (id: string) => ipcRenderer.invoke('tests:get', id)
   },
   testCases: {
     list: (params: TestCaseListParams) => ipcRenderer.invoke('testCases:list', params),

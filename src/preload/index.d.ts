@@ -45,12 +45,14 @@ declare global {
         setStatus: (id: string, status: ProjectStatus) => Promise<Project>
         remove: (id: string) => Promise<void>
         executionHistory: (params: ProjectExecutionHistoryParams) => Promise<ProjectExecutionHistoryEntry[]>
+        get: (id: string) => Promise<ProjectSummary | null>
       }
       tests: {
         list: (params: TestListParams) => Promise<Test[]>
         create: (input: TestCreateInput) => Promise<Test>
         update: (input: TestUpdateInput) => Promise<Test>
         remove: (id: string) => Promise<void>
+        get: (id: string) => Promise<Test | null>
       }
       testCases: {
         list: (params: TestCaseListParams) => Promise<TestCase[]>

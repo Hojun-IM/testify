@@ -2,11 +2,8 @@ import type { ProjectSummary } from '../../../../shared/types'
 import { FolderIcon } from '../ui/icons'
 import { StatusBadge } from '../ui/StatusBadge'
 import { ProjectActionsMenu } from './ProjectActionsMenu'
+import { formatDate } from '../../utils/format'
 import styles from './ProjectCard.module.css'
-
-function formatDate(iso: string): string {
-  return iso.slice(0, 10)
-}
 
 export function ProjectCard({
   project,

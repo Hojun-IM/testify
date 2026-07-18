@@ -84,7 +84,7 @@ export const PICKER_ENABLE_SCRIPT = `
     event.preventDefault();
     event.stopPropagation();
     console.log(
-      '__TESTIFY_PICKER__' +
+      '${PICKER_PREFIX}' +
         JSON.stringify({ kind: 'picked', x: event.clientX, y: event.clientY, element: describe(event.target) })
     );
   }

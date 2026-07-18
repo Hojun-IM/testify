@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { randomUUID } from 'crypto'
-import { getDb, currentUser } from '../db'
+import { getDb, currentUser, likePattern } from '../db'
 import type {
   Project,
   ProjectCreateInput,
@@ -25,7 +25,7 @@ export function registerProjectHandlers(): void {
     }
     if (params.search && params.search.trim() !== '') {
       conditions.push("p.name LIKE @search ESCAPE '\\'")
-      args.search = `%${params.search.trim().replace(/[\\%_]/g, '\\$&')}%`
+      args.search = likePattern(params.search)
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
@@ -44,6 +44,27 @@ export function registerProjectHandlers(): void {
         `
       )
       .all(args) as ProjectSummary[]
+  })
+
+  // 사이드바 최근 항목처럼, 특정 프로젝트 하나만 카운트 포함해서 조회할 때 쓴다
+  ipcMain.handle('projects:get', (_event, id: string): ProjectSummary | null => {
+    const db = getDb()
+    return (
+      (db
+        .prepare(
+          `
+            SELECT
+              p.*,
+              (SELECT COUNT(*) FROM tests t WHERE t.project_id = p.id) AS test_count,
+              (SELECT COUNT(*) FROM test_cases tc
+                 JOIN tests t ON tc.test_id = t.id
+                WHERE t.project_id = p.id) AS test_case_count
+            FROM projects p
+            WHERE p.id = ?
+          `
+        )
+        .get(id) as ProjectSummary | undefined) ?? null
+    )
   })
 
   ipcMain.handle('projects:create', (_event, input: ProjectCreateInput): Project => {

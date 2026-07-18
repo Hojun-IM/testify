@@ -4,30 +4,13 @@ import { SlidePanel } from '../ui/SlidePanel'
 import { Button } from '../ui/Button'
 import { TextField } from '../ui/TextField'
 import { Switch } from '../ui/Switch'
-import { CodeIcon, PlusIcon, CloseIcon, SendIcon, TargetIcon } from '../ui/icons'
+import { CodeIcon } from '../ui/icons'
+import { FORM_PANEL_WIDTH } from '../layout/layoutMetrics'
 import { CaseRecorderModal } from '../testcases/CaseRecorderModal'
 import { ApiRecorderModal } from '../testcases/ApiRecorderModal'
+import { ScenarioStepsEditor, cleanScenarioSteps } from '../testcases/ScenarioStepsEditor'
+import { HOOK_TIMING_DESCRIPTIONS, HOOK_TIMING_LABELS, HOOK_TIMING_ORDER } from './hookTimings'
 import styles from './HookFormPanel.module.css'
-
-export const HOOK_PANEL_WIDTH = 660
-
-export const HOOK_TIMING_LABELS: Record<HookTiming, string> = {
-  beforeAll: 'Before All',
-  beforeEach: 'Before Each',
-  afterEach: 'After Each',
-  afterAll: 'After All',
-  onFailure: 'On Failure'
-}
-
-export const HOOK_TIMING_DESCRIPTIONS: Record<HookTiming, string> = {
-  beforeAll: '전체 실행 시작 전 1회 실행',
-  beforeEach: '각 케이스 실행 전마다 실행',
-  afterEach: '각 케이스 실행 후마다 실행',
-  afterAll: '전체 실행 종료 후 1회 실행',
-  onFailure: '케이스가 실패했을 때만 실행 (정리/상태 복구용)'
-}
-
-const TIMING_ORDER: HookTiming[] = ['beforeAll', 'beforeEach', 'afterEach', 'afterAll', 'onFailure']
 
 export type HookFormValues = {
   name: string
@@ -85,18 +68,6 @@ export function HookFormPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  function addStep(): void {
-    setSteps((prev) => [...prev, { action: '', expected: '', outcome: '' }])
-  }
-
-  function updateStep(index: number, field: 'action' | 'expected' | 'outcome', value: string): void {
-    setSteps((prev) => prev.map((step, i) => (i === index ? { ...step, [field]: value } : step)))
-  }
-
-  function removeStep(index: number): void {
-    setSteps((prev) => prev.filter((_, i) => i !== index))
-  }
-
   // 브라우저 기록: 스텝 하나씩 append (폼이 단일 소스라 지운 스텝이 되살아나지 않는다)
   function appendRecordedStep(step: TestCaseStep, pageUrl?: string): void {
     setSteps((prev) => [...prev, step])
@@ -111,16 +82,6 @@ export function HookFormPanel({
     const trimmed = name.trim()
     if (!trimmed) return
 
-    const cleanSteps = steps
-      .map((step) => ({
-        action: step.action.trim(),
-        expected: step.expected.trim(),
-        outcome: step.outcome.trim(),
-        // 자동화 스텝은 텍스트를 수정해도 실행 바인딩이 유지되어야 한다
-        ...(step.automation ? { automation: step.automation } : {})
-      }))
-      .filter((step) => step.action || step.expected || step.outcome)
-
     setSubmitting(true)
     await onSubmit({
       name: trimmed,
@@ -128,7 +89,7 @@ export function HookFormPanel({
       type,
       timing,
       enabled,
-      steps: cleanSteps,
+      steps: cleanScenarioSteps(steps),
       start_url: type === 'e2e' ? startUrl : null
     })
     setSubmitting(false)
@@ -152,7 +113,7 @@ export function HookFormPanel({
       onClose={handlePanelClose}
       icon={<CodeIcon />}
       title={isEdit ? '훅 수정' : '새 훅'}
-      width={HOOK_PANEL_WIDTH}
+      width={FORM_PANEL_WIDTH}
       dim={false}
       footer={
         <>
@@ -204,7 +165,7 @@ export function HookFormPanel({
       <div className={styles.field}>
         <span className={`${styles.label} text-ivory-dim`}>실행 시점</span>
         <div className={styles.optionGroup}>
-          {TIMING_ORDER.map((option) => (
+          {HOOK_TIMING_ORDER.map((option) => (
             <button
               key={option}
               type="button"
@@ -229,77 +190,13 @@ export function HookFormPanel({
         </span>
       </div>
 
-      <div className={`${styles.sectionTitle} text-clay-300`}>시나리오</div>
-      <div className={`${styles.stepHeaderRow} text-ivory-faint`}>
-        <span className={styles.stepHeaderCell}>Action</span>
-        <span className={styles.stepHeaderCell}>Expected</span>
-        <span className={styles.stepHeaderCell}>Outcome</span>
-        <span className={styles.stepHeaderSpacer} />
-      </div>
-      {steps.map((step, index) => (
-        <div key={index} className={styles.stepRow}>
-          {step.automation && (
-            <span
-              className={styles.autoBadge}
-              title={`자동화 스텝 — ${step.automation.actionType}${step.automation.selector ? ` (${step.automation.selector})` : ''}`}
-            >
-              ●
-            </span>
-          )}
-          <input
-            type="text"
-            className={`${styles.stepInput} bg-raised border-line text-ivory`}
-            value={step.action}
-            onChange={(event) => updateStep(index, 'action', event.target.value)}
-            placeholder="수행 동작"
-          />
-          <input
-            type="text"
-            className={`${styles.stepInput} bg-raised border-line text-ivory`}
-            value={step.expected}
-            onChange={(event) => updateStep(index, 'expected', event.target.value)}
-            placeholder="기대 결과"
-          />
-          <input
-            type="text"
-            className={`${styles.stepInput} bg-raised border-line text-ivory`}
-            value={step.outcome}
-            onChange={(event) => updateStep(index, 'outcome', event.target.value)}
-            placeholder="실제 결과"
-          />
-          <button
-            type="button"
-            className="icon-btn text-ivory-faint"
-            aria-label="항목 삭제"
-            onClick={() => removeStep(index)}
-          >
-            <CloseIcon size={14} />
-          </button>
-        </div>
-      ))}
-      <div className={styles.stepActions}>
-        <button type="button" className={`${styles.addStepBtn} border-line text-ivory-dim`} onClick={addStep}>
-          <PlusIcon size={13} /> 항목 추가
-        </button>
-        {type === 'e2e' && (
-          <button
-            type="button"
-            className={`${styles.addStepBtn} ${styles.recordBtn} border-line`}
-            onClick={() => setRecorderOpen(true)}
-          >
-            <TargetIcon size={13} /> 브라우저로 기록
-          </button>
-        )}
-        {type === 'api' && (
-          <button
-            type="button"
-            className={`${styles.addStepBtn} ${styles.recordBtn} border-line`}
-            onClick={() => setApiRecorderOpen(true)}
-          >
-            <SendIcon size={13} /> API 요청 작성
-          </button>
-        )}
-      </div>
+      <ScenarioStepsEditor
+        steps={steps}
+        onStepsChange={setSteps}
+        testType={type}
+        onOpenRecorder={() => setRecorderOpen(true)}
+        onOpenApiRecorder={() => setApiRecorderOpen(true)}
+      />
 
       <CaseRecorderModal
         open={recorderOpen}
