@@ -3,6 +3,7 @@ import styles from './Pagination.module.css'
 
 type PageEntry = number | 'ellipsis'
 
+// 첫/마지막 페이지는 항상 보여주고, 현재 페이지 앞뒤 1칸까지만 노출한 뒤 나머지는 ···로 접는다
 function getPageEntries(page: number, totalPages: number): PageEntry[] {
   const entries: PageEntry[] = [1]
   const windowStart = Math.max(2, page - 1)

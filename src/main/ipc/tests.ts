@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { randomUUID } from 'crypto'
-import { getDb, currentUser } from '../db'
+import { getDb, currentUser, likePattern } from '../db'
 import type { Test, TestCreateInput, TestListParams, TestUpdateInput } from '../../shared/types'
 
 export function registerTestHandlers(): void {
@@ -15,7 +15,7 @@ export function registerTestHandlers(): void {
     }
     if (params.search && params.search.trim() !== '') {
       conditions.push("name LIKE @search ESCAPE '\\'")
-      args.search = `%${params.search.trim().replace(/[\\%_]/g, '\\$&')}%`
+      args.search = likePattern(params.search)
     }
 
     return db

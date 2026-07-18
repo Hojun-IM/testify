@@ -5,8 +5,7 @@ import { Button } from '../ui/Button'
 import { CloseIcon, TargetIcon } from '../ui/icons'
 import { LiveBrowserPane } from '../dashboard/LiveBrowserPane'
 import type { ScenarioStepInput } from '../dashboard/ScenarioPanel'
-import { floatingPanelLeft, LAYOUT_PADDING } from '../layout/layoutMetrics'
-import { TEST_CASE_PANEL_WIDTH } from './TestCaseFormPanel'
+import { floatingPanelLeft, FORM_PANEL_WIDTH, LAYOUT_PADDING } from '../layout/layoutMetrics'
 import styles from './CaseRecorderModal.module.css'
 
 // 브라우저를 띄워 클릭/우클릭으로 테스트 케이스 스텝을 기록하는 오버레이.
@@ -75,7 +74,7 @@ export function CaseRecorderModal({
       style={{
         left: floatingPanelLeft(sidebarCollapsed),
         // 케이스 패널이 이제 오른쪽에서 LAYOUT_PADDING만큼 띄워져 있어(SlidePanel), 그 왼쪽 여백까지 더한다
-        right: TEST_CASE_PANEL_WIDTH + LAYOUT_PADDING + 12
+        right: FORM_PANEL_WIDTH + LAYOUT_PADDING + 12
       }}
     >
       <div className={`${styles.header} border-line`}>

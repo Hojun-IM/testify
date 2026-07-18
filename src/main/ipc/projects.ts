@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { randomUUID } from 'crypto'
-import { getDb, currentUser } from '../db'
+import { getDb, currentUser, likePattern } from '../db'
 import type {
   Project,
   ProjectCreateInput,
@@ -25,7 +25,7 @@ export function registerProjectHandlers(): void {
     }
     if (params.search && params.search.trim() !== '') {
       conditions.push("p.name LIKE @search ESCAPE '\\'")
-      args.search = `%${params.search.trim().replace(/[\\%_]/g, '\\$&')}%`
+      args.search = likePattern(params.search)
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''

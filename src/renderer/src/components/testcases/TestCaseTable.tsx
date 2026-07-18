@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import type { TestCase } from '../../../../shared/types'
 import { IconMenuButton } from '../ui/IconMenuButton'
 import { DragHandleIcon } from '../ui/icons'
+import { formatDateTime } from '../../utils/format'
 import styles from './TestCaseTable.module.css'
 
 const STATUS_LABEL: Record<TestCase['status'], string> = {
@@ -10,7 +11,10 @@ const STATUS_LABEL: Record<TestCase['status'], string> = {
   deprecated: 'Deprecated'
 }
 
+// 행을 절대 위치(top = index * ROW_HEIGHT)로 배치해 드래그 정렬 시 애니메이션되도록 한다.
+// CSS의 행 높이와 동기화되어야 하는 값
 const ROW_HEIGHT = 52
+// 이 거리(px) 이상 움직여야 드래그로 간주 — 미만이면 행 클릭(수정 패널 열기)으로 처리
 const DRAG_THRESHOLD = 4
 
 type DragState = {
@@ -20,10 +24,6 @@ type DragState = {
   previewIndex: number
   currentTop: number
   moved: boolean
-}
-
-function formatDateTime(iso: string): string {
-  return iso.replace('T', ' ').slice(0, 16)
 }
 
 export function TestCaseTable({

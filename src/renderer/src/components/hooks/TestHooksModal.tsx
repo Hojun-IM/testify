@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Hook } from '../../../../shared/types'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
-import { HOOK_TIMING_LABELS } from './HookFormPanel'
+import { HOOK_TIMING_LABELS } from './hookTimings'
 import styles from './TestHooksModal.module.css'
 
 // 사이드바 훅 탭에서 관리하는 전역 훅을 이 테스트에 불러와(연결해) 사용하도록 선택하는 모달.

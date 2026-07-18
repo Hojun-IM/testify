@@ -5,8 +5,10 @@ import { SearchInput } from '../ui/SearchInput'
 import { Button } from '../ui/Button'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { TestCaseTable } from './TestCaseTable'
-import { TestCaseFormPanel, TEST_CASE_PANEL_WIDTH, type TestCaseFormValues } from './TestCaseFormPanel'
+import { TestCaseFormPanel, type TestCaseFormValues } from './TestCaseFormPanel'
+import { FORM_PANEL_WIDTH } from '../layout/layoutMetrics'
 import { TestHooksModal } from '../hooks/TestHooksModal'
+import { useDebouncedQuery } from '../../hooks/useDebouncedQuery'
 import styles from './TestCaseListView.module.css'
 
 export function TestCaseListView({
@@ -56,20 +58,10 @@ export function TestCaseListView({
     setCases(result)
   }
 
-  useEffect(() => {
-    let cancelled = false
-
-    const timer = setTimeout(() => {
-      window.api.testCases.list({ testId: test.id, search }).then((result) => {
-        if (!cancelled) setCases(result)
-      })
-    }, 200)
-
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-  }, [test.id, search])
+  useDebouncedQuery(() => window.api.testCases.list({ testId: test.id, search }), setCases, [
+    test.id,
+    search
+  ])
 
   // 목록이 갱신되면 이미 사라진 케이스의 선택 상태를 정리한다
   useEffect(() => {
@@ -170,7 +162,7 @@ export function TestCaseListView({
         </div>
       </div>
 
-      <div className={styles.body} style={{ paddingRight: panelOpen ? TEST_CASE_PANEL_WIDTH : 0 }}>
+      <div className={styles.body} style={{ paddingRight: panelOpen ? FORM_PANEL_WIDTH : 0 }}>
         <div className={styles.content}>
           <div className={styles.controlsRow}>
             <div className={styles.left}>

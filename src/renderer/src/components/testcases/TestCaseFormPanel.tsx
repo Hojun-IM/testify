@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import type { TestCasePolicy, TestCaseStatus, TestCaseStep, TestType } from '../../../../shared/types'
+import { DEFAULT_TEST_CASE_POLICY } from '../../../../shared/constants'
 import { SlidePanel } from '../ui/SlidePanel'
 import { Button } from '../ui/Button'
 import { TextField } from '../ui/TextField'
 import { type DropdownOption } from '../ui/Dropdown'
-import { CodeIcon, PlusIcon, CloseIcon, SendIcon, TargetIcon } from '../ui/icons'
+import { CodeIcon } from '../ui/icons'
+import { FORM_PANEL_WIDTH } from '../layout/layoutMetrics'
 import { CaseRecorderModal } from './CaseRecorderModal'
 import { ApiRecorderModal } from './ApiRecorderModal'
+import { ScenarioStepsEditor, cleanScenarioSteps } from './ScenarioStepsEditor'
 import styles from './TestCaseFormPanel.module.css'
 
 const STATUS_OPTIONS: DropdownOption[] = [
@@ -14,16 +17,6 @@ const STATUS_OPTIONS: DropdownOption[] = [
   { value: 'ready', label: 'Ready' },
   { value: 'deprecated', label: 'Deprecated' }
 ]
-
-export const TEST_CASE_PANEL_WIDTH = 660
-
-const DEFAULT_POLICY: TestCasePolicy = {
-  targetEnvs: [],
-  trigger: 'manual',
-  retryCount: 0,
-  timeoutSec: 30,
-  notifyOnFailure: false
-}
 
 export type TestCaseFormValues = {
   name: string
@@ -58,7 +51,7 @@ export function TestCaseFormPanel({
   const [precondition, setPrecondition] = useState('')
   const [steps, setSteps] = useState<TestCaseStep[]>([])
   const [tagsText, setTagsText] = useState('')
-  const [policy, setPolicy] = useState<TestCasePolicy>(DEFAULT_POLICY)
+  const [policy, setPolicy] = useState<TestCasePolicy>(DEFAULT_TEST_CASE_POLICY)
   const [submitting, setSubmitting] = useState(false)
   const [recorderOpen, setRecorderOpen] = useState(false)
   const [apiRecorderOpen, setApiRecorderOpen] = useState(false)
@@ -70,7 +63,7 @@ export function TestCaseFormPanel({
       setPrecondition(initialValues?.precondition ?? '')
       setSteps(initialValues?.steps ?? [])
       setTagsText((initialValues?.tags ?? []).join(', '))
-      setPolicy(initialValues?.policy ?? DEFAULT_POLICY)
+      setPolicy(initialValues?.policy ?? DEFAULT_TEST_CASE_POLICY)
     }
     // 패널이 닫히면 기록 오버레이도 함께 닫는다
     if (!open) {
@@ -80,18 +73,6 @@ export function TestCaseFormPanel({
     // 패널이 열릴 때만 초기값으로 리셋한다 (열려 있는 동안 initialValues 재생성으로 인한 입력값 덮어쓰기 방지)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
-
-  function addStep(): void {
-    setSteps((prev) => [...prev, { action: '', expected: '', outcome: '' }])
-  }
-
-  function updateStep(index: number, field: keyof TestCaseStep, value: string): void {
-    setSteps((prev) => prev.map((step, i) => (i === index ? { ...step, [field]: value } : step)))
-  }
-
-  function removeStep(index: number): void {
-    setSteps((prev) => prev.filter((_, i) => i !== index))
-  }
 
   // 브라우저 기록 오버레이에서 스텝이 기록될 때마다 폼의 시나리오 끝에 하나씩 추가한다.
   // 폼이 스텝 목록의 단일 소스이므로, 사용자가 중간에 지운 스텝이 되살아나지 않는다.
@@ -113,15 +94,6 @@ export function TestCaseFormPanel({
     const trimmed = name.trim()
     if (!trimmed) return
 
-    const cleanSteps = steps
-      .map((step) => ({
-        action: step.action.trim(),
-        expected: step.expected.trim(),
-        outcome: step.outcome.trim(),
-        // 자동화 스텝은 텍스트를 수정하더라도 실행 바인딩(selector 등)이 유지되어야 한다
-        ...(step.automation ? { automation: step.automation } : {})
-      }))
-      .filter((step) => step.action || step.expected || step.outcome)
     const cleanTags = tagsText
       .split(',')
       .map((tag) => tag.trim())
@@ -132,7 +104,7 @@ export function TestCaseFormPanel({
       name: trimmed,
       status,
       precondition: precondition.trim(),
-      steps: cleanSteps,
+      steps: cleanScenarioSteps(steps),
       tags: cleanTags,
       policy
     })
@@ -157,7 +129,7 @@ export function TestCaseFormPanel({
       onClose={handlePanelClose}
       icon={<CodeIcon />}
       title={isEdit ? '테스트 케이스 수정' : '새 테스트 케이스'}
-      width={TEST_CASE_PANEL_WIDTH}
+      width={FORM_PANEL_WIDTH}
       dim={false}
       footer={
         <>
@@ -200,79 +172,15 @@ export function TestCaseFormPanel({
         </div>
       </div>
 
-      <div className={`${styles.sectionTitle} text-clay-300`}>시나리오</div>
-      <div className={`${styles.stepHeaderRow} text-ivory-faint`}>
-        <span className={styles.stepHeaderCell}>Action</span>
-        <span className={styles.stepHeaderCell}>Expected</span>
-        <span className={styles.stepHeaderCell}>Outcome</span>
-        <span className={styles.stepHeaderSpacer} />
-      </div>
-      {steps.map((step, index) => (
-        <div key={index} className={styles.stepRow}>
-          {step.automation && (
-            <span
-              className={styles.autoBadge}
-              title={`자동화 스텝 — ${step.automation.actionType}${step.automation.selector ? ` (${step.automation.selector})` : ''}`}
-            >
-              ●
-            </span>
-          )}
-          <input
-            type="text"
-            className={`${styles.stepInput} bg-raised border-line text-ivory`}
-            value={step.action}
-            onChange={(event) => updateStep(index, 'action', event.target.value)}
-            placeholder="수행 동작"
-          />
-          <input
-            type="text"
-            className={`${styles.stepInput} bg-raised border-line text-ivory`}
-            value={step.expected}
-            onChange={(event) => updateStep(index, 'expected', event.target.value)}
-            placeholder="기대 결과"
-          />
-          <input
-            type="text"
-            className={`${styles.stepInput} bg-raised border-line text-ivory`}
-            value={step.outcome}
-            onChange={(event) => updateStep(index, 'outcome', event.target.value)}
-            placeholder="실제 결과"
-          />
-          <button
-            type="button"
-            className="icon-btn text-ivory-faint"
-            aria-label="항목 삭제"
-            onClick={() => removeStep(index)}
-          >
-            <CloseIcon size={14} />
-          </button>
-        </div>
-      ))}
-      <div className={styles.stepActions}>
-        <button type="button" className={`${styles.addStepBtn} border-line text-ivory-dim`} onClick={addStep}>
-          <PlusIcon size={13} /> 항목 추가
-        </button>
-        {testType === 'e2e' && (
-          <button
-            type="button"
-            className={`${styles.addStepBtn} ${styles.recordBtn} border-line`}
-            onClick={() => setRecorderOpen(true)}
-          >
-            <TargetIcon size={13} /> 브라우저로 기록
-          </button>
-        )}
-        {testType === 'api' && (
-          <button
-            type="button"
-            className={`${styles.addStepBtn} ${styles.recordBtn} border-line`}
-            onClick={() => setApiRecorderOpen(true)}
-          >
-            <SendIcon size={13} /> API 요청 작성
-          </button>
-        )}
-      </div>
+      <ScenarioStepsEditor
+        steps={steps}
+        onStepsChange={setSteps}
+        testType={testType}
+        onOpenRecorder={() => setRecorderOpen(true)}
+        onOpenApiRecorder={() => setApiRecorderOpen(true)}
+      />
 
-      <label className={styles.field} style={{ marginTop: 16 }}>
+      <label className={`${styles.field} ${styles.tagField}`}>
         <span className={`${styles.label} text-ivory-dim`}>태그</span>
         <input
           type="text"

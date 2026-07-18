@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import { randomUUID } from 'crypto'
-import { getDb, currentUser } from '../db'
+import { getDb, currentUser, likePattern } from '../db'
+import { DEFAULT_TEST_CASE_POLICY } from '../../shared/constants'
 import type {
   ApiKeyValue,
   ApiRequestSpec,
@@ -18,14 +19,6 @@ type TestCaseRow = Omit<TestCase, 'steps' | 'tags' | 'policy'> & {
   steps: string
   tags: string
   policy: string
-}
-
-const DEFAULT_POLICY: TestCasePolicy = {
-  targetEnvs: [],
-  trigger: 'manual',
-  retryCount: 0,
-  timeoutSec: 30,
-  notifyOnFailure: false
 }
 
 // 앱을 거치지 않고 직접 삽입되었거나 이전 스키마로 저장된 행은 policy/steps가 불완전할 수 있어
@@ -120,7 +113,7 @@ function parseRow(row: TestCaseRow): TestCase {
     ...row,
     steps: parsedSteps.map(normalizeStep),
     tags: JSON.parse(row.tags),
-    policy: { ...DEFAULT_POLICY, ...parsedPolicy }
+    policy: { ...DEFAULT_TEST_CASE_POLICY, ...parsedPolicy }
   }
 }
 
@@ -132,7 +125,7 @@ export function registerTestCaseHandlers(): void {
 
     if (params.search && params.search.trim() !== '') {
       conditions.push("name LIKE @search ESCAPE '\\'")
-      args.search = `%${params.search.trim().replace(/[\\%_]/g, '\\$&')}%`
+      args.search = likePattern(params.search)
     }
 
     const rows = db
