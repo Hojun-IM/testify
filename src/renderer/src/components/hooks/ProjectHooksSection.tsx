@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Hook, HookTiming, TestType } from '../../../../shared/types'
 import { Dropdown, type DropdownOption } from '../ui/Dropdown'
 import { Button } from '../ui/Button'
@@ -33,10 +33,15 @@ function formatDateTime(iso: string): string {
 // projectId를 주면 해당 프로젝트 전용 훅을, 생략하면 전역 훅(사이드바 훅 탭)을 관리한다
 export function ProjectHooksSection({
   projectId,
-  sidebarCollapsed
+  sidebarCollapsed,
+  autoOpenCreate,
+  onAutoOpenConsumed
 }: {
   projectId?: string
   sidebarCollapsed?: boolean
+  // 사이드바 "새 훅" 버튼에서 훅 탭으로 넘어오자마자 생성 패널을 바로 띄우고 싶을 때 true로 전달
+  autoOpenCreate?: boolean
+  onAutoOpenConsumed?: () => void
 }): JSX.Element {
   const [search, setSearch] = useState('')
   const [type, setType] = useState('all')
@@ -80,6 +85,22 @@ export function ProjectHooksSection({
     setEditingHook(null)
     setPanelOpen(true)
   }
+
+  // 이 정확한 autoOpenCreate 신호를 이미 처리했는지 — 값 자체가 boolean이라 매 렌더마다
+  // 새로 true로 "보일" 수는 없지만, StrictMode 이중 렌더/재마운트에도 한 번만 열리도록 가드한다
+  const autoOpenHandledRef = useRef(false)
+
+  useEffect(() => {
+    if (!autoOpenCreate || autoOpenHandledRef.current) return
+    autoOpenHandledRef.current = true
+    openCreatePanel()
+    onAutoOpenConsumed?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenCreate])
+
+  useEffect(() => {
+    if (!autoOpenCreate) autoOpenHandledRef.current = false
+  }, [autoOpenCreate])
 
   function openEditPanel(hook: Hook): void {
     setPanelMode('edit')
