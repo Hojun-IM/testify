@@ -8,6 +8,10 @@ export const SIDEBAR_WIDTH = 285
 // 확보하는 좌측 여백. 각 화면 헤더의 `.header.collapsed` 패딩과 동일한 값이다
 export const TRAFFIC_LIGHT_CLEARANCE = 107
 
+// 케이스/훅 생성·수정 SlidePanel의 공통 폭. 기록 오버레이(CaseRecorderModal/ApiRecorderModal)가
+// 이 폭만큼 오른쪽을 비워두고 뜨므로, 두 패널이 같은 값을 쓰지 않으면 오버레이가 어긋난다
+export const FORM_PANEL_WIDTH = 660
+
 // 사이드바를 제외한 콘텐츠 영역의 실제 좌측 시작 좌표.
 // 모달을 "사이드바가 있으면 그 옆 콘텐츠 영역 중앙, 없으면 전체 폭 중앙"에 띄울 때 기준으로 쓴다
 export function contentAreaLeft(sidebarCollapsed?: boolean): number {
