@@ -29,6 +29,13 @@ export function registerTestHandlers(): void {
       .all(args) as Test[]
   })
 
+  // 재생 중인 케이스의 test_id만 알고 있을 때(대시보드 실행 시작 시점) 소속 프로젝트를
+  // 알아내기 위해 쓴다 — 최근 항목을 "실행한 테스트의 프로젝트" 기준으로 갱신할 때 사용
+  ipcMain.handle('tests:get', (_event, id: string): Test | null => {
+    const db = getDb()
+    return (db.prepare('SELECT * FROM tests WHERE id = ?').get(id) as Test | undefined) ?? null
+  })
+
   ipcMain.handle('tests:create', (_event, input: TestCreateInput): Test => {
     const db = getDb()
     const user = currentUser()
