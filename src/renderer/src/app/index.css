@@ -1,6 +1,19 @@
 @import 'tailwindcss';
 
 /*
+ * Pretendard 가변 폰트를 앱에 번들한다.
+ * 300여 개로 쪼개진 dynamic-subset이 아니라 단일 woff2를 쓴다.
+ * 오프라인에서도 첫 렌더부터 같은 폰트로 보여야 하기 때문이다.
+ */
+@font-face {
+  font-family: 'Pretendard Variable';
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url('pretendard/dist/web/variable/woff2/PretendardVariable.woff2') format('woff2-variations');
+}
+
+/*
  * 원시 팔레트 — 티켓에 정의된 13개 값.
  * @theme에 등록하지 않으므로 bg-canvas 같은 유틸리티는 생성되지 않는다.
  * 색을 쓸 때는 항상 아래 의미 토큰을 거친다.
@@ -58,6 +71,8 @@
 }
 
 @theme inline {
+  --font-sans: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
