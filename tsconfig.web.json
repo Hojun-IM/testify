@@ -3,6 +3,7 @@
   "include": ["src/renderer/src/**/*", "src/preload/*.d.ts"],
   "compilerOptions": {
     "composite": true,
+    "jsx": "react-jsx",
     "paths": {
       "@renderer/*": ["./src/renderer/src/*"]
     }

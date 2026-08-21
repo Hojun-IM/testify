@@ -1,0 +1,131 @@
+@import 'tailwindcss';
+
+/*
+ * Pretendard 가변 폰트를 앱에 번들한다.
+ * 300여 개로 쪼개진 dynamic-subset이 아니라 단일 woff2를 쓴다.
+ * 오프라인에서도 첫 렌더부터 같은 폰트로 보여야 하기 때문이다.
+ */
+@font-face {
+  font-family: 'Pretendard Variable';
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url('pretendard/dist/web/variable/woff2/PretendardVariable.woff2') format('woff2-variations');
+}
+
+/*
+ * 원시 팔레트 — 티켓에 정의된 13개 값.
+ * @theme에 등록하지 않으므로 bg-canvas 같은 유틸리티는 생성되지 않는다.
+ * 색을 쓸 때는 항상 아래 의미 토큰을 거친다.
+ */
+:root {
+  color-scheme: dark;
+
+  --canvas: #12110d;
+  --surface: #191814;
+  --raised: #3a3936;
+  --overlay: #4d4b46;
+  --line: #2a2926;
+
+  --clay-300: #f4c26a;
+  --clay-400: #f0ab3e;
+  --clay-500: #d8842c;
+  --clay-600: #a8641f;
+
+  --ivory: #f2ede2;
+  --ivory-dim: #8f8b81;
+  --ivory-faint: #6b675f;
+
+  --ok: #8fbc8f;
+  --danger: #e5484d;
+
+  /* 의미 토큰 — shadcn 표준 슬롯 */
+  --background: var(--canvas);
+  --foreground: var(--ivory);
+  --card: var(--surface);
+  --card-foreground: var(--ivory);
+  --popover: var(--raised);
+  --popover-foreground: var(--ivory);
+  --primary: var(--clay-500);
+  --primary-foreground: var(--canvas);
+  --secondary: var(--raised);
+  --secondary-foreground: var(--ivory);
+  --muted: var(--surface);
+  --muted-foreground: var(--ivory-dim);
+  --accent: var(--overlay);
+  --accent-foreground: var(--ivory);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--ivory);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--clay-300);
+
+  /* 의미 토큰 — shadcn에 대응 슬롯이 없어 확장한 것 */
+  --success: var(--ok);
+  --success-foreground: var(--canvas);
+  --foreground-faint: var(--ivory-faint);
+  --primary-hover: var(--clay-400);
+  --primary-active: var(--clay-600);
+
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --font-sans: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-foreground-faint: var(--foreground-faint);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/*
+ * 전역 기본값.
+ * 데스크톱 앱이라 문서 전체가 스크롤되지 않는다.
+ * 스크롤이 필요한 영역은 그 영역 안에서 처리한다.
+ */
+html,
+body,
+#root {
+  height: 100%;
+  background-color: var(--background);
+}
+
+body {
+  overflow: hidden;
+  color: var(--foreground);
+}
+
+/*
+ * hiddenInset 타이틀바 자리를 덮는 영역을 창 드래그 핸들로 만든다.
+ * Tailwind로 표현할 수 없어 전역 CSS에 유틸리티로 둔다.
+ */
+.drag-region {
+  -webkit-app-region: drag;
+}
